@@ -1,4 +1,4 @@
-﻿namespace DcpTracker.Application.Interfaces
+﻿namespace MobCentra.Application.Interfaces
 {
     public interface IIdentityManager<TId> where TId : struct
     {

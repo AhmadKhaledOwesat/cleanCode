@@ -1,9 +1,9 @@
-﻿using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
+﻿using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
 using System.Linq.Expressions;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public partial class BaseBll<T,TId,TFilter>(IBaseDal<T,TId,TFilter> baseDal):IBaseBll<T,TId,TFilter> where T : BaseEntity<TId> where TId : struct
     {

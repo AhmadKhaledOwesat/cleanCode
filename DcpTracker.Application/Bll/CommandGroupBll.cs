@@ -1,9 +1,9 @@
-﻿using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.Extensions;
-using CommandGroup = DcpTracker.Domain.Entities.CommandGroup;
+﻿using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Extensions;
+using CommandGroup = MobCentra.Domain.Entities.CommandGroup;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class CommandGroupBll(IBaseDal<CommandGroup, Guid, CommandGroupFilter> baseDal) : BaseBll<CommandGroup, Guid, CommandGroupFilter>(baseDal), ICommandGroupBll
     {

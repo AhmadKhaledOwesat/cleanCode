@@ -1,11 +1,11 @@
-﻿using DcpTracker.Domain.Entities;
-using DcpTracker.Infrastructure.EfContext;
+﻿using MobCentra.Domain.Entities;
+using MobCentra.Infrastructure.EfContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
 using System.Dynamic;
 using System.Linq.Expressions;
-namespace DcpTracker.Infrastructure.Repositories
+namespace MobCentra.Infrastructure.Repositories
 {
     public partial class EfRepository<T, TId>(StudioContext context) : IEfRepository<T, TId> where T : BaseEntity<TId>
         where TId : struct

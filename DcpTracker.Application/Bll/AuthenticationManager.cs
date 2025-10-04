@@ -3,10 +3,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
-using DcpTracker.Application.Interfaces;
-using DcpTracker.Application.Dto;
+using MobCentra.Application.Interfaces;
+using MobCentra.Application.Dto;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class AuthenticationManager(IConfiguration configuration) : IAuthenticationManager
     {

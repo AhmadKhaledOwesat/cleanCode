@@ -1,12 +1,12 @@
-﻿using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Enum;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.Repositories;
+﻿using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Enum;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq.Expressions;
 using System.Reflection;
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class ConstraintBll(IBaseDal<Domain.Entities.Application, Guid, ApplicationFilter> baseDal, IServiceProvider serviceProvider) : BaseBll<Domain.Entities.Application, Guid, ApplicationFilter>(baseDal), IConstraintBll
     {

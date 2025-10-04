@@ -1,6 +1,6 @@
 ﻿
 
-namespace DcpTracker.Domain.Interfaces
+namespace MobCentra.Domain.Interfaces
 {
     public interface IDcpMapper
     {

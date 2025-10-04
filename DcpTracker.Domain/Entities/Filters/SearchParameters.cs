@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace DcpTracker.Domain.Entities.Filters
+namespace MobCentra.Domain.Entities.Filters
 {
     public class SearchParameters<T>
     {

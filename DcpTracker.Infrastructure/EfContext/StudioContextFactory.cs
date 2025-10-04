@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace DcpTracker.Infrastructure.EfContext
+namespace MobCentra.Infrastructure.EfContext
 {
     public class StudioContextFactory : IDesignTimeDbContextFactory<StudioContext>
     {
@@ -11,10 +11,10 @@ namespace DcpTracker.Infrastructure.EfContext
             var optionsBuilder = new DbContextOptionsBuilder<StudioContext>();
             var rootPath = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
             var configuration = new ConfigurationBuilder()
-                     .SetBasePath(Path.Combine(rootPath, "DcpTracker"))
+                     .SetBasePath(Path.Combine(rootPath, "MobCentra"))
                      .AddJsonFile("appsettings.json")
                      .Build();
-            optionsBuilder.UseSqlServer(configuration.GetConnectionString("DcpTracker"));
+            optionsBuilder.UseSqlServer(configuration.GetConnectionString("MobCentra"));
             return new(optionsBuilder.Options);
         }
     }

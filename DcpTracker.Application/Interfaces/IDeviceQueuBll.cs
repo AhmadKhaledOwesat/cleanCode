@@ -1,7 +1,7 @@
-﻿using DcpTracker.Domain.Entities.Filters;
-using DeviceQueu = DcpTracker.Domain.Entities.DeviceQueu;
+﻿using MobCentra.Domain.Entities.Filters;
+using DeviceQueu = MobCentra.Domain.Entities.DeviceQueu;
 
-namespace DcpTracker.Domain.Interfaces
+namespace MobCentra.Domain.Interfaces
 {
     public interface IDeviceQueuBll : IBaseBll<DeviceQueu, Guid, DeviceQueuFilter>
     {

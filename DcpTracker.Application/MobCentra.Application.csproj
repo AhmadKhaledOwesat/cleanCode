@@ -58,11 +58,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DcpTracker.Domain\DcpTracker.Domain.csproj" />
-    <ProjectReference Include="..\DcpTracker.Infrastructure\DcpTracker.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
     <PackageReference Include="Google.Apis.FirebaseCloudMessaging.v1" Version="1.69.0.3722" />
     <PackageReference Include="Google.Cloud.Firestore" Version="3.10.0" />
@@ -71,6 +66,11 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.7" />
     <PackageReference Include="MimeKit" Version="4.13.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DcpTracker.Domain\MobCentra.Domain.csproj" />
+    <ProjectReference Include="..\DcpTracker.Infrastructure\MobCentra.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

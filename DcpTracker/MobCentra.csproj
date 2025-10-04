@@ -34,9 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DcpTracker.Application\DcpTracker.Application.csproj" />
-    <ProjectReference Include="..\DcpTracker.Domain\DcpTracker.Domain.csproj" />
-    <ProjectReference Include="..\DcpTracker.Infrastructure\DcpTracker.Infrastructure.csproj" />
+    <ProjectReference Include="..\DcpTracker.Application\MobCentra.Application.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
-﻿using DcpTracker.Domain.Entities.Filters;
-using GoogleCommand = DcpTracker.Domain.Entities.GoogleCommand;
+﻿using MobCentra.Domain.Entities.Filters;
+using GoogleCommand = MobCentra.Domain.Entities.GoogleCommand;
 
-namespace DcpTracker.Domain.Interfaces
+namespace MobCentra.Domain.Interfaces
 {
     public interface IGoogleCommandBll : IBaseBll<GoogleCommand, Guid, GoogleCommandFilter>
     {

@@ -1,8 +1,8 @@
-﻿using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
+﻿using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class CompanySubscriptionBll(IBaseDal<CompanySubscription, Guid, CompanySubscriptionFilter> baseDal) : BaseBll<CompanySubscription, Guid, CompanySubscriptionFilter>(baseDal), ICompanySubscriptionBll
     {

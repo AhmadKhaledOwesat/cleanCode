@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace DcpTracker.Infrastructure.Migrations
+namespace MobCentra.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class InitRequestServiceRequest11 : Migration

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
 using System.Text;
-namespace DcpTracker.Infrastructure.Extensions
+namespace MobCentra.Infrastructure.Extensions
 {
     public static class DcpExtentions
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 
-namespace DcpTracker.Application
+namespace MobCentra.Application
 {
     public static class ExceptionMiddleware
     {

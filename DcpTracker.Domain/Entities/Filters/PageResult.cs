@@ -1,4 +1,4 @@
-﻿namespace DcpTracker.Domain.Entities.Filters
+﻿namespace MobCentra.Domain.Entities.Filters
 {
     public sealed class PageResult<T>
     {

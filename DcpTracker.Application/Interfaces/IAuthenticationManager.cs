@@ -1,6 +1,6 @@
-﻿using DcpTracker.Application.Dto;
+﻿using MobCentra.Application.Dto;
 
-namespace DcpTracker.Application.Interfaces
+namespace MobCentra.Application.Interfaces
 {
    public interface IAuthenticationManager
     {

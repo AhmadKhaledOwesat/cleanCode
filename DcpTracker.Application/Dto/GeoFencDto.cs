@@ -1,7 +1,7 @@
 ﻿using NetTopologySuite.Geometries;
 using System.Text.Json.Serialization;
 
-namespace DcpTracker.Application.Dto
+namespace MobCentra.Application.Dto
 {
     public class GeoFencDto : BaseDto<Guid>
     {

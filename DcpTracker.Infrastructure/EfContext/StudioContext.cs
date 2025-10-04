@@ -1,8 +1,8 @@
-﻿using DcpTracker.Domain.Entities;
+﻿using MobCentra.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using TaskStatus = DcpTracker.Domain.Entities.TaskStatus;
+using TaskStatus = MobCentra.Domain.Entities.TaskStatus;
 
-namespace DcpTracker.Infrastructure.EfContext
+namespace MobCentra.Infrastructure.EfContext
 { 
     public class StudioContext(DbContextOptions<StudioContext> dbContextOptions) : DbContext(dbContextOptions)
     {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DcpTracker.Domain.Entities
+namespace MobCentra.Domain.Entities
 {
     public class Statistic : BaseEntity<Guid>
     {

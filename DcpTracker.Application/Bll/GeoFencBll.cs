@@ -1,13 +1,13 @@
-﻿using DcpTracker.Application.Dto;
-using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
+﻿using MobCentra.Application.Dto;
+using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using Newtonsoft.Json;
 using static Grpc.Core.Metadata;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class GeoFencBll(IBaseDal<GeoFenc, Guid, GeoFencFilter> baseDal) : BaseBll<GeoFenc, Guid, GeoFencFilter>(baseDal), IGeoFencBll
     {

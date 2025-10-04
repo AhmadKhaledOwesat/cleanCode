@@ -1,9 +1,9 @@
-﻿using DcpTracker.Domain.Interfaces;
+﻿using MobCentra.Domain.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace DcpTracker.Application.HostedService
+namespace MobCentra.Application.HostedService
 {
     public class BackgroundService(ILogger<BackgroundService> logger, IServiceProvider  serviceScope) : IHostedService, IDisposable
     {

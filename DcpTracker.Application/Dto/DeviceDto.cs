@@ -1,7 +1,7 @@
 ﻿
-using DcpTracker.Domain.Entities;
+using MobCentra.Domain.Entities;
 
-namespace DcpTracker.Application.Dto
+namespace MobCentra.Application.Dto
 {
     public class DeviceDto : BaseDto<Guid>
     {

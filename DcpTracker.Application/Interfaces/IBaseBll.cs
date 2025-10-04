@@ -1,8 +1,8 @@
-﻿using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
+﻿using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
 using System.Linq.Expressions;
 
-namespace DcpTracker.Domain.Interfaces
+namespace MobCentra.Domain.Interfaces
 {
     public interface IBaseBll<T, TId, TFilter> where T : BaseEntity<TId>
         where TId : struct

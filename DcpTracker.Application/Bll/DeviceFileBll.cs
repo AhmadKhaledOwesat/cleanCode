@@ -1,7 +1,7 @@
-﻿using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-namespace DcpTracker.Application.Bll
+﻿using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+namespace MobCentra.Application.Bll
 {
     public class DeviceFileBll(IBaseDal<DeviceFile, Guid, DeviceFileFilter> baseDal, IDeviceBll deviceBll) : BaseBll<DeviceFile, Guid, DeviceFileFilter>(baseDal), IDeviceFileBll
     {

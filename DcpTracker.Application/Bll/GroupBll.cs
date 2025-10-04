@@ -1,9 +1,9 @@
-﻿using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.Extensions;
-using Group = DcpTracker.Domain.Entities.Group;
+﻿using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Extensions;
+using Group = MobCentra.Domain.Entities.Group;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class GroupBll(IBaseDal<Group, Guid, GroupFilter> baseDal,IConstraintBll constraintBll) : BaseBll<Group, Guid, GroupFilter>(baseDal), IGroupBll
     {

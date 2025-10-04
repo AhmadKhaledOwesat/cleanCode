@@ -1,11 +1,11 @@
-﻿using DcpTracker.Application.Dto;
-using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.Extensions;
+﻿using MobCentra.Application.Dto;
+using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Extensions;
 using System.Linq.Expressions;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class AppUserBll(IBaseDal<AppUsers, Guid, AppUserFilter> baseDal,ICompanyBll companyBll,IDcpMapper dcpMapper) : BaseBll<AppUsers, Guid, AppUserFilter>(baseDal), IAppUserBll
     {

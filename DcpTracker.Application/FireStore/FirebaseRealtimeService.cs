@@ -1,4 +1,4 @@
-﻿namespace DcpTracker.Application.FireStore
+﻿namespace MobCentra.Application.FireStore
 {
     public class FirebaseRealtimeService
     {

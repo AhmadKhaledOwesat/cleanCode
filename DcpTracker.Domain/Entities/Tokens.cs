@@ -1,4 +1,4 @@
-﻿namespace DcpTracker.Application.Entities
+﻿namespace MobCentra.Application.Entities
 {
     public class Tokens
     {

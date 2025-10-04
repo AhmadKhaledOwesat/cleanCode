@@ -1,8 +1,8 @@
-﻿using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-using TaskStatus = DcpTracker.Domain.Entities.TaskStatus;
+﻿using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+using TaskStatus = MobCentra.Domain.Entities.TaskStatus;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class TaskStatusBll(IBaseDal<TaskStatus, Guid, TaskStatusFilter> baseDal) : BaseBll<TaskStatus, Guid, TaskStatusFilter>(baseDal), ITaskStatusBll
     {

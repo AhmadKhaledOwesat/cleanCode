@@ -1,10 +1,10 @@
-﻿using DcpTracker.Application.Bll;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
+﻿using MobCentra.Application.Bll;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
 
-namespace DcpTracker.Notification.Bll
+namespace MobCentra.Notification.Bll
 {
-    public class NotificationBll(IBaseDal<DcpTracker.Domain.Entities.Notifications, Guid, NotificationFilter> baseDal,IConstraintBll constraintBll) : BaseBll<DcpTracker.Domain.Entities.Notifications, Guid, NotificationFilter>(baseDal), INotificationBll
+    public class NotificationBll(IBaseDal<MobCentra.Domain.Entities.Notifications, Guid, NotificationFilter> baseDal,IConstraintBll constraintBll) : BaseBll<MobCentra.Domain.Entities.Notifications, Guid, NotificationFilter>(baseDal), INotificationBll
     {
         public override async Task<PageResult<Domain.Entities.Notifications>> GetAllAsync(NotificationFilter searchParameters) => await base.GetAllAsync(searchParameters);
 

@@ -1,11 +1,11 @@
-﻿using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.Extensions;
+﻿using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Extensions;
 using System.Linq.Expressions;
-using Profile = DcpTracker.Domain.Entities.Profile;
+using Profile = MobCentra.Domain.Entities.Profile;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class ProfileBll(IBaseDal<Profile, Guid, ProfileFilter> baseDal, IDeviceQueuBll deviceQueuBll, IConstraintBll constraintBll, IProfileFeatureBll profileFeatureBll, IDeviceBll deviceBll) : BaseBll<Profile, Guid, ProfileFilter>(baseDal), IProfileBll
     {

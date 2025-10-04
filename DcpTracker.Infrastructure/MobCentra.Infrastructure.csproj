@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DcpTracker.Domain\DcpTracker.Domain.csproj" />
+    <ProjectReference Include="..\DcpTracker.Domain\MobCentra.Domain.csproj" />
   </ItemGroup>
 
 </Project>

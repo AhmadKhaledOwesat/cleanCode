@@ -1,13 +1,13 @@
-﻿using DcpTracker.Application.Bll;
-using DcpTracker.Application.Dto;
-using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
+﻿using MobCentra.Application.Bll;
+using MobCentra.Application.Dto;
+using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Profile = DcpTracker.Domain.Entities.Profile;
+using Profile = MobCentra.Domain.Entities.Profile;
 
-namespace DcpTracker.Controllers
+namespace MobCentra.Controllers
 {
     
     [ApiController]

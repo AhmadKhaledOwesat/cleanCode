@@ -1,9 +1,9 @@
-﻿using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.Extensions;
-using DeviceBatteryTrans = DcpTracker.Domain.Entities.DeviceBatteryTrans;
+﻿using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Extensions;
+using DeviceBatteryTrans = MobCentra.Domain.Entities.DeviceBatteryTrans;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class DeviceBatteryTransBll(IBaseDal<DeviceBatteryTrans, Guid, DeviceBatteryTransFilter> baseDal) : BaseBll<DeviceBatteryTrans, Guid, DeviceBatteryTransFilter>(baseDal), IDeviceBatteryTransBll
     {

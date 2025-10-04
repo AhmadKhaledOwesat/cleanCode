@@ -1,4 +1,4 @@
-﻿namespace DcpTracker.Domain.Entities
+﻿namespace MobCentra.Domain.Entities
 {
     public class CommandGroup : BaseEntity<Guid>
     {

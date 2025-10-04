@@ -1,7 +1,7 @@
-﻿using DcpTracker.Domain.Enum;
+﻿using MobCentra.Domain.Enum;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DcpTracker.Domain.Entities
+namespace MobCentra.Domain.Entities
 {
     public class DeviceNotification : BaseEntity<Guid>
     {

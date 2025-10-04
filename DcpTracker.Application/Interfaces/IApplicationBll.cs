@@ -1,6 +1,6 @@
-﻿using DcpTracker.Domain.Entities.Filters;
+﻿using MobCentra.Domain.Entities.Filters;
 
-namespace DcpTracker.Domain.Interfaces
+namespace MobCentra.Domain.Interfaces
 {
     public interface IApplicationBll : IBaseBll<Entities.Application, Guid, ApplicationFilter>
     {

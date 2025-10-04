@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace DcpTracker.Application.Dto
+namespace MobCentra.Application.Dto
 {
     public class BaseDto<TId> where TId : struct
     {

@@ -1,6 +1,6 @@
-﻿namespace DcpTracker.Application.Bll
+﻿namespace MobCentra.Application.Bll
 {
-    using DcpTracker.Infrastructure.Extensions;
+    using MobCentra.Infrastructure.Extensions;
     using Google.Apis.Auth.OAuth2;
     using System.Collections.Generic;
     using System.Net.Http.Headers;

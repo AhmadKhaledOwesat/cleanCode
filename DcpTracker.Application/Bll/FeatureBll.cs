@@ -1,9 +1,9 @@
-﻿using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.Extensions;
-using Feature = DcpTracker.Domain.Entities.Feature;
+﻿using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Extensions;
+using Feature = MobCentra.Domain.Entities.Feature;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class FeatureBll(IBaseDal<Feature, int, FeatureFilter> baseDal) : BaseBll<Feature, int, FeatureFilter>(baseDal), IFeatureBll
     {

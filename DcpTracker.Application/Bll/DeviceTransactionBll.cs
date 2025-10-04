@@ -1,10 +1,10 @@
-﻿using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.Extensions;
+﻿using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Extensions;
 using System.Linq.Expressions;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class DeviceTransactionBll(IBaseDal<DeviceTransaction, Guid, DeviceTransactionFilter> baseDal) : BaseBll<DeviceTransaction, Guid, DeviceTransactionFilter>(baseDal), IDeviceTransactionBll
     {

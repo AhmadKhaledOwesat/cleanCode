@@ -1,9 +1,9 @@
-﻿using DcpTracker.Application.Dto;
-using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
+﻿using MobCentra.Application.Dto;
+using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
 
-namespace DcpTracker.Application.Interfaces
+namespace MobCentra.Application.Interfaces
 {
     public interface IUserBll : IBaseBll<Users, Guid, UserFilter>
     {

@@ -1,8 +1,8 @@
-﻿using DcpTracker.Domain.Entities;
+﻿using MobCentra.Domain.Entities;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Linq.Expressions;
 
-namespace DcpTracker.Infrastructure.Repositories
+namespace MobCentra.Infrastructure.Repositories
 {
     public partial interface IEfRepository<T, TId> where T : BaseEntity<TId>
         where TId : struct

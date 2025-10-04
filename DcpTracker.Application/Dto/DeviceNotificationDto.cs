@@ -1,7 +1,7 @@
 ﻿
-using DcpTracker.Domain.Enum;
+using MobCentra.Domain.Enum;
 
-namespace DcpTracker.Application.Dto
+namespace MobCentra.Application.Dto
 {
     public class DeviceNotificationDto : BaseDto<Guid>
     {

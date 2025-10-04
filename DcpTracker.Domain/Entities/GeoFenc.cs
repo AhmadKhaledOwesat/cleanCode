@@ -1,7 +1,7 @@
 ﻿using NetTopologySuite.Geometries;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DcpTracker.Domain.Entities
+namespace MobCentra.Domain.Entities
 {
     public class GeoFenc : BaseEntity<Guid>
     {

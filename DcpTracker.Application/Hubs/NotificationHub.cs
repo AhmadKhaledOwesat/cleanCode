@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 
-namespace DcpTracker.Application.Hubs
+namespace MobCentra.Application.Hubs
 {
     public class NotificationHub : Hub
     {

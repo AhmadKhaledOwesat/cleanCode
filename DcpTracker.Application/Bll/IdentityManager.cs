@@ -4,9 +4,9 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using DcpTracker.Application.Interfaces;
+using MobCentra.Application.Interfaces;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class IdentityManager<TId>(IHttpContextAccessor _httpContextAccessor, IConfiguration _configuration) : IIdentityManager<TId> where TId : struct
     {

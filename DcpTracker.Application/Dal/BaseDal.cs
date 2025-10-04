@@ -1,12 +1,12 @@
-﻿using DcpTracker.Application.Interfaces;
-using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.Repositories;
+﻿using MobCentra.Application.Interfaces;
+using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace DcpTracker.Application.Dal
+namespace MobCentra.Application.Dal
 {
     public class BaseDal<T, TId, TFilter>(IEfRepository<T, TId> efRepository, IIdentityManager<TId> identityManager) : IBaseDal<T, TId, TFilter> where T : BaseEntity<TId>
         where TId : struct

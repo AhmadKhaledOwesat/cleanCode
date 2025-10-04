@@ -1,4 +1,4 @@
-﻿namespace DcpTracker.Domain.Enum
+﻿namespace MobCentra.Domain.Enum
 {
     public enum DeviceOperationType
     {

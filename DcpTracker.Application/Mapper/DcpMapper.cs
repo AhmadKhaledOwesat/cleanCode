@@ -1,14 +1,14 @@
 ﻿
 using AutoMapper;
-using DcpTracker.Application.Dto;
-using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
+using MobCentra.Application.Dto;
+using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
 using NetTopologySuite.Geometries;
 using Profile = AutoMapper.Profile;
-using TaskStatus = DcpTracker.Domain.Entities.TaskStatus;
+using TaskStatus = MobCentra.Domain.Entities.TaskStatus;
 
-namespace DcpTracker.Application.Mapper
+namespace MobCentra.Application.Mapper
 {
     public class DcpMapper : Profile, IDcpMapper
     {
@@ -40,9 +40,9 @@ namespace DcpTracker.Application.Mapper
             CreateMap<CommandGroup, CommandGroupDto>().ReverseMap();
             CreateMap<PageResult<DeviceLog>, PageResult<DeviceLogDto>>().ReverseMap();
             CreateMap<DeviceLog, DeviceLogDto>().ReverseMap();
-            CreateMap<PageResult<DcpTracker.Domain.Entities.Profile>, PageResult<ProfileDto>>()
+            CreateMap<PageResult<MobCentra.Domain.Entities.Profile>, PageResult<ProfileDto>>()
                 .ReverseMap();
-            CreateMap<DcpTracker.Domain.Entities.Profile, ProfileDto>()
+            CreateMap<MobCentra.Domain.Entities.Profile, ProfileDto>()
                                 .ForMember(dest => dest.CompanyName, src => src.MapFrom(a => a.Company == null ? string.Empty : a.Company.NameAr))
                 .ReverseMap();
             CreateMap<PageResult<Statistic>, PageResult<StatisticDto>>().ReverseMap();
@@ -133,8 +133,8 @@ namespace DcpTracker.Application.Mapper
             CreateMap<PageResult<Report>, PageResult<ReportDto>>().ReverseMap();
             CreateMap<ReportParameter, ReportParameterDto>().ReverseMap();
             CreateMap<PageResult<ReportParameter>, PageResult<ReportParameterDto>>().ReverseMap();
-            CreateMap<DcpTracker.Domain.Entities.Notifications, NotificationDto>().ReverseMap();
-            CreateMap<PageResult<DcpTracker.Domain.Entities.Notifications>, PageResult<NotificationDto>>().ReverseMap();
+            CreateMap<MobCentra.Domain.Entities.Notifications, NotificationDto>().ReverseMap();
+            CreateMap<PageResult<MobCentra.Domain.Entities.Notifications>, PageResult<NotificationDto>>().ReverseMap();
         }
 
         private Point newPoint(string location)

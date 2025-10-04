@@ -1,8 +1,8 @@
-﻿using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-using City = DcpTracker.Domain.Entities.City;
+﻿using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+using City = MobCentra.Domain.Entities.City;
 
-namespace DcpTracker.Domain.Interfaces
+namespace MobCentra.Domain.Interfaces
 {
     public interface ICityBll : IBaseBll<City, Guid, CityFilter>
     {

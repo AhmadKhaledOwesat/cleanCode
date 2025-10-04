@@ -1,9 +1,9 @@
-﻿using DcpTracker.Domain.Interfaces;
+﻿using MobCentra.Domain.Interfaces;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public  class EmailOptions
     {

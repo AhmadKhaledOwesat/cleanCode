@@ -1,7 +1,7 @@
-﻿using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Enum;
+﻿using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Enum;
 
-namespace DcpTracker.Domain.Interfaces
+namespace MobCentra.Domain.Interfaces
 {
     public interface IConstraintBll : IBaseBll<Entities.Application, Guid, ApplicationFilter>
     {

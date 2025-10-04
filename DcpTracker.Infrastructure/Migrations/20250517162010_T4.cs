@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace DcpTracker.Infrastructure.Migrations
+namespace MobCentra.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class T4 : Migration

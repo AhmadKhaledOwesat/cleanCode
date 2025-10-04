@@ -1,4 +1,4 @@
-﻿namespace DcpTracker.Application.Dto
+﻿namespace MobCentra.Application.Dto
 {
     public class ApplicationDto : BaseDto<Guid>
     {

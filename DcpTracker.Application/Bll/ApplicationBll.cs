@@ -1,16 +1,16 @@
-﻿using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.Extensions;
+﻿using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Extensions;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
-    public class ApplicationBll(IBaseDal<DcpTracker.Domain.Entities.Application, Guid, ApplicationFilter> baseDal, IConstraintBll constraintBll) : BaseBll<DcpTracker.Domain.Entities.Application, Guid, ApplicationFilter>(baseDal), IApplicationBll
+    public class ApplicationBll(IBaseDal<MobCentra.Domain.Entities.Application, Guid, ApplicationFilter> baseDal, IConstraintBll constraintBll) : BaseBll<MobCentra.Domain.Entities.Application, Guid, ApplicationFilter>(baseDal), IApplicationBll
     {
-        public override async Task<PageResult<DcpTracker.Domain.Entities.Application>> GetAllAsync(ApplicationFilter searchParameters)
+        public override async Task<PageResult<MobCentra.Domain.Entities.Application>> GetAllAsync(ApplicationFilter searchParameters)
         {
             if (searchParameters is not null)
             {
-                searchParameters.Expression = new Func<DcpTracker.Domain.Entities.Application, bool>(a =>
+                searchParameters.Expression = new Func<MobCentra.Domain.Entities.Application, bool>(a =>
                 (a.NameAr == searchParameters?.Description || searchParameters.Description.IsNullOrEmpty())
                 && a.CompanyId == searchParameters.CompanyId
                 && (searchParameters.Active == null || a.Active == searchParameters.Active));

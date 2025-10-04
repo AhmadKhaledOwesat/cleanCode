@@ -1,8 +1,8 @@
 ﻿
-using DcpTracker.Application.Bll;
-using DcpTracker.Application.DI;
-using DcpTracker.Application.Hubs;
-using DcpTracker.Domain.Entities;
+using MobCentra.Application.Bll;
+using MobCentra.Application.DI;
+using MobCentra.Application.Hubs;
+using MobCentra.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
@@ -57,7 +57,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
 });
-//builder.Services.AddHostedService<DcpTracker.Application.HostedService.BackgroundService>();
+//builder.Services.AddHostedService<MobCentra.Application.HostedService.BackgroundService>();
 
 var app = builder.Build();
 app.UseExceptionHandler(appError =>

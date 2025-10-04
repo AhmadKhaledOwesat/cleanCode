@@ -1,15 +1,15 @@
-﻿using DcpTracker.Application.Bll;
-using DcpTracker.Application.Dal;
-using DcpTracker.Application.Interfaces;
-using DcpTracker.Application.Mapper;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.EfContext;
-using DcpTracker.Infrastructure.Repositories;
-using DcpTracker.Notification.Bll;
+﻿using MobCentra.Application.Bll;
+using MobCentra.Application.Dal;
+using MobCentra.Application.Interfaces;
+using MobCentra.Application.Mapper;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.EfContext;
+using MobCentra.Infrastructure.Repositories;
+using MobCentra.Notification.Bll;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-namespace DcpTracker.Application.DI
+namespace MobCentra.Application.DI
 {
     public static class ServiceExtension
     {
@@ -25,7 +25,7 @@ namespace DcpTracker.Application.DI
         public static void AddEfDbContext(this IServiceCollection serviceDescriptors, IConfiguration configuration)
         {
             serviceDescriptors.AddDbContext<StudioContext>(options => options.UseLazyLoadingProxies().UseSqlServer(
-                configuration.GetConnectionString("DcpTracker"),
+                configuration.GetConnectionString("MobCentra"),
                  x => x.UseNetTopologySuite()));
         }
 

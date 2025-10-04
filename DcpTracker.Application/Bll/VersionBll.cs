@@ -1,9 +1,9 @@
-﻿using DcpTracker.Domain.Entities.Filters;
-using DcpTracker.Domain.Interfaces;
-using DcpTracker.Infrastructure.Extensions;
-using Version = DcpTracker.Domain.Entities.Version;
+﻿using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Extensions;
+using Version = MobCentra.Domain.Entities.Version;
 
-namespace DcpTracker.Application.Bll
+namespace MobCentra.Application.Bll
 {
     public class VersionBll(IBaseDal<Version, Guid, VersionFilter> baseDal) : BaseBll<Version, Guid, VersionFilter>(baseDal), IVersionBll
     {

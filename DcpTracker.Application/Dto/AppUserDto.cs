@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DcpTracker.Application.Dto
+namespace MobCentra.Application.Dto
 {
     public class AppUserDto : BaseDto<Guid>
     {

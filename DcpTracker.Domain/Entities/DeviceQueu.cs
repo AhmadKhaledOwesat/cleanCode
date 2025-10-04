@@ -1,5 +1,5 @@
 ﻿
-namespace DcpTracker.Domain.Entities
+namespace MobCentra.Domain.Entities
 {
     public class DeviceQueu : BaseEntity<Guid>
     {

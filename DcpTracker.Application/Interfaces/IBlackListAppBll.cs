@@ -1,6 +1,6 @@
-﻿using DcpTracker.Domain.Entities;
-using DcpTracker.Domain.Entities.Filters;
-namespace DcpTracker.Domain.Interfaces
+﻿using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities.Filters;
+namespace MobCentra.Domain.Interfaces
 {
     public interface IBlackListAppBll : IBaseBll<BlackListApp, Guid, BlackListAppFilter>
     {

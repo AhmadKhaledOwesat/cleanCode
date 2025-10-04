@@ -69,8 +69,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DcpTracker.Domain\MobCentra.Domain.csproj" />
-    <ProjectReference Include="..\DcpTracker.Infrastructure\MobCentra.Infrastructure.csproj" />
+    <ProjectReference Include="..\MobCentra.Domain\MobCentra.Domain.csproj" />
+    <ProjectReference Include="..\MobCentra.Infrastructure\MobCentra.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

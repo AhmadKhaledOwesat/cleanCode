@@ -6,7 +6,11 @@ namespace MobCentra.Notification.Bll
 {
     public class NotificationBll(IBaseDal<MobCentra.Domain.Entities.Notifications, Guid, NotificationFilter> baseDal,IConstraintBll constraintBll) : BaseBll<MobCentra.Domain.Entities.Notifications, Guid, NotificationFilter>(baseDal), INotificationBll
     {
-        public override async Task<PageResult<Domain.Entities.Notifications>> GetAllAsync(NotificationFilter searchParameters) => await base.GetAllAsync(searchParameters);
+        public override async Task<PageResult<Domain.Entities.Notifications>> GetAllAsync(NotificationFilter searchParameters)
+        {
+            searchParameters.Expression = new Func<Domain.Entities.Notifications, bool>(a => a.CompanyId == searchParameters.CompanyId);
+           return await base.GetAllAsync(searchParameters);
+        }
 
 
         public override async Task AddAsync(Domain.Entities.Notifications entity)

@@ -6,5 +6,7 @@
         public string Data { get; set; }
         public Guid? DeviceId { get; set; }
         public string DeviceName { get; set; }
+        public string CreatedByName { get; set; }
+
     }
 }

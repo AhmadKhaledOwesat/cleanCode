@@ -1,4 +1,7 @@
-﻿namespace MobCentra.Domain.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+
+namespace MobCentra.Domain.Entities
 {
     public class Tasks : BaseEntity<Guid>
     {
@@ -12,5 +15,14 @@
         public string ResponseGpsLocation { get; set; }
         public string TargetGpsLocation { get; set; }
         public Guid? CompanyId { get; set; }
+
+        [JsonIgnore]
+        [ForeignKey(nameof(CreatedBy))]
+        public virtual Users CreatedUser { get; set; }
+
+        [NotMapped]
+        public Guid? GroupId { get; set; }
+        [NotMapped]
+        public Guid[]? DevicesId { get; set; } = [];
     }
 }

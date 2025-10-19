@@ -24,6 +24,8 @@
         public string Body { get; set; }
         public string[] Token { get; set; }
         public Guid? GroupId { get; set; }
-        public Guid? CompanyId { get; set; } 
+        public Guid? CompanyId { get; set; }
+        public Guid? CurrentCompanyId { get; set; }
+
     }
 }

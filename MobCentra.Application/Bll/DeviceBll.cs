@@ -1,16 +1,17 @@
-﻿using MobCentra.Application.Dto;
+﻿using Microsoft.Extensions.Configuration;
+using MobCentra.Application.Dto;
 using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
 using MobCentra.Infrastructure.Extensions;
-using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using RTools_NTS.Util;
 using System.Globalization;
 using System.Linq.Expressions;
 
 namespace MobCentra.Application.Bll
 {
-    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal,IDeviceBatteryTransBll deviceBatteryTransBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
+    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal,INotificationBll notificationBll,IDeviceBatteryTransBll deviceBatteryTransBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
     {
 
         public override async Task AddAsync(Device entity)
@@ -89,10 +90,15 @@ namespace MobCentra.Application.Bll
         {
             if (searchParameters is not null)
             {
+                searchParameters.StatusId ??= -1;
+                searchParameters.PinnedStatusId ??= -1;
                 searchParameters.Expression = new Func<Device, bool>(a =>
                     a.CompanyId == searchParameters.CompanyId
                 && (searchParameters.Description.IsNullOrEmpty() || a.Name.Contains(searchParameters?.Description))
                 && (searchParameters.GroupId == null || a.GroupId == searchParameters.GroupId)
+                && (searchParameters.StatusId == -1 || (a.IsOnline == searchParameters.StatusId))
+                && (searchParameters.PinnedStatusId == -1 || ((searchParameters.PinnedStatusId == 1 && !a.UnpinedDate.HasValue) || (searchParameters.PinnedStatusId == 0 && a.UnpinedDate.HasValue)))
+
                 && (searchParameters.ProfileId == null || a.ProfileId == searchParameters.ProfileId)
                 && (!searchParameters.FromDate.HasValue || (a.UnpinedDate.HasValue && a.UnpinedDate.Value.Date == searchParameters.FromDate.Value.Date))
                 );
@@ -293,11 +299,10 @@ namespace MobCentra.Application.Bll
 
                 foreach (var token in sendNotifyDto.Token)
                 {
-                    // await notificationBll.AddAsync(new() { Body = sendNotifyDto.Body, CompanyId = sendNotifyDto.CompanyId.Value, Token = token, Title = sendNotifyDto.Title });
                     try
                     {
                         await googleCommandSender.SendNotifyAsync(token, sendNotifyDto.Title, sendNotifyDto.Body);
-
+                        await notificationBll.AddAsync(new() { Body = sendNotifyDto.Body, CompanyId = sendNotifyDto.CurrentCompanyId.Value, Token = token, Title = sendNotifyDto.Title });
                     }
                     catch (Exception)
                     {

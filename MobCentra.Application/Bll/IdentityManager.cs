@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using MobCentra.Application.Interfaces;
+using MobCentra.Infrastructure.Extensions;
 
 namespace MobCentra.Application.Bll
 {
@@ -14,6 +15,11 @@ namespace MobCentra.Application.Bll
         private TId GetCurrentUserId()
         {
             string token = _httpContextAccessor!.HttpContext!.Request.Headers["Authorization"]!.FirstOrDefault()?.Replace("Bearer ", string.Empty) ?? string.Empty;
+
+
+            if (token.IsNullOrEmpty()) return (TId)(object)Guid.NewGuid();
+
+
             JwtSecurityTokenHandler handler = new();
             TokenValidationParameters validations = new()
             {

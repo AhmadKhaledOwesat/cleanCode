@@ -22,6 +22,7 @@ namespace MobCentra.Application.Mapper
             CreateMap<Users, UsersDto>().ReverseMap();
             CreateMap<City, CityDto>().ReverseMap();
             CreateMap<Tasks, TasksDto>()
+                .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.CreatedUser == null ? "مدير النظام" : a.CreatedUser.FullName))
                 .ReverseMap();
             CreateMap<PageResult<Tasks>, PageResult<TasksDto>>().ReverseMap();
             CreateMap<PageResult<Users>, PageResult<UsersDto>>().ReverseMap();
@@ -39,7 +40,9 @@ namespace MobCentra.Application.Mapper
             CreateMap<PageResult<CommandGroup>, PageResult<CommandGroupDto>>().ReverseMap();
             CreateMap<CommandGroup, CommandGroupDto>().ReverseMap();
             CreateMap<PageResult<DeviceLog>, PageResult<DeviceLogDto>>().ReverseMap();
-            CreateMap<DeviceLog, DeviceLogDto>().ReverseMap();
+            CreateMap<DeviceLog, DeviceLogDto>()
+                                .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.CreatedUser == null ? "مدير النظام" : a.CreatedUser.FullName))
+                .ReverseMap();
             CreateMap<PageResult<MobCentra.Domain.Entities.Profile>, PageResult<ProfileDto>>()
                 .ReverseMap();
             CreateMap<MobCentra.Domain.Entities.Profile, ProfileDto>()
@@ -133,8 +136,10 @@ namespace MobCentra.Application.Mapper
             CreateMap<PageResult<Report>, PageResult<ReportDto>>().ReverseMap();
             CreateMap<ReportParameter, ReportParameterDto>().ReverseMap();
             CreateMap<PageResult<ReportParameter>, PageResult<ReportParameterDto>>().ReverseMap();
-            CreateMap<MobCentra.Domain.Entities.Notifications, NotificationDto>().ReverseMap();
-            CreateMap<PageResult<MobCentra.Domain.Entities.Notifications>, PageResult<NotificationDto>>().ReverseMap();
+            CreateMap<Notifications, NotificationDto>()
+                .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.CreatedUser == null ? "مدير النظام" : a.CreatedUser.FullName))
+                .ReverseMap();
+            CreateMap<PageResult<Notifications>, PageResult<NotificationDto>>().ReverseMap();
         }
 
         private Point newPoint(string location)

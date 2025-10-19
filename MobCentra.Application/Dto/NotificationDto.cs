@@ -6,6 +6,6 @@
         public string Body { get; set; }
         public string Token { get; set; }
         public Guid CompanyId { get; set; }
-
+        public string CreatedByName { get; set; }
     }
 }

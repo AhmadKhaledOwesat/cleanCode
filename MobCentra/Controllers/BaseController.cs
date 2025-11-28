@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MobCentra.Controllers
 {
-    [Authorize]
+   // [Authorize]
     public class BaseController<T, TDto, TId, TFilter> : Controller
         where T : BaseEntity<TId>
         where TDto : BaseDto<TId>

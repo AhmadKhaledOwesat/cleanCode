@@ -13,6 +13,8 @@ namespace MobCentra.Controllers
     [EnableCors("AllowAllOrigins")]
     public class NotificationController(INotificationBll NotificationBll,IDcpMapper mapper) : BaseController<Notifications,NotificationDto,Guid,NotificationFilter>(NotificationBll, mapper)
     {
+        [HttpPost]
+        [Route("search")]
         public override async Task<DcpResponse<PageResult<NotificationDto>>> GetAllAsync([FromBody] NotificationFilter searchParameters)
         {
             return  new DcpResponse<PageResult<NotificationDto>>(mapper.Map<PageResult<NotificationDto>>(await NotificationBll.GetAllAsync(searchParameters)));      

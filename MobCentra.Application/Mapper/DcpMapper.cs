@@ -84,7 +84,7 @@ namespace MobCentra.Application.Mapper
                     .ForMember(dest => dest.CurrentLocation, src => src.MapFrom(a => a.CurrentLocation == null ? string.Empty : $"{a.CurrentLocation.X},{a.CurrentLocation.Y}"));
 
             CreateMap<DeviceDto, Device>()
-                    .ForMember(dest => dest.CurrentLocation, src => src.MapFrom(a => a.CurrentLocation == null ? null : newPoint(a.CurrentLocation)));
+                    .ForMember(dest => dest.CurrentLocation, src => src.MapFrom(a => a.CurrentLocation == null ? null : NewPoint(a.CurrentLocation)));
 
 
             CreateMap<PageResult<Device>, PageResult<DeviceDto>>().ReverseMap();
@@ -142,7 +142,7 @@ namespace MobCentra.Application.Mapper
             CreateMap<PageResult<Notifications>, PageResult<NotificationDto>>().ReverseMap();
         }
 
-        private Point newPoint(string location)
+        private Point NewPoint(string location)
         {
             if(string.IsNullOrEmpty(location)  || location.Split(",").Length < 2) return new Point(0, 0);
             return new Point(Convert.ToDouble(location.Split(",")[0]), Convert.ToDouble(location.Split(",")[1]));

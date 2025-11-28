@@ -8,6 +8,8 @@ namespace MobCentra.Application.Dto
         public Guid? ParentId { get; set; }
         public string Icon { get; set; }
         public string ParentName { get; set; }
+        public int? SortOrder { get; set; }
+
         public virtual ICollection<RolePrivilegeDto> RolePrivileges { get; set; }
 
     }

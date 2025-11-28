@@ -6,7 +6,7 @@ namespace MobCentra.Application.Bll
 {
     public class PrivilegeBll(IBaseDal<Privilege, Guid, PrivilegeFilter> baseDal) : BaseBll<Privilege, Guid, PrivilegeFilter>(baseDal), IPrivilegeBll
     {
-        public override Task<PageResult<Privilege>> GetAllAsync(PrivilegeFilter searchParameters)
+        public override async Task<PageResult<Privilege>> GetAllAsync(PrivilegeFilter searchParameters)
         {
             if (searchParameters is not null)
             {
@@ -14,7 +14,9 @@ namespace MobCentra.Application.Bll
                     searchParameters.Expression = new Func<Privilege, bool>(a => a.PrivilegeName == searchParameters.Name);
             }
 
-            return base.GetAllAsync(searchParameters);
+            var data = await base.GetAllAsync(searchParameters);
+            data.Collections = [.. data.Collections.OrderBy(a => a.SortOrder)];
+            return data;
         }
     }
 }

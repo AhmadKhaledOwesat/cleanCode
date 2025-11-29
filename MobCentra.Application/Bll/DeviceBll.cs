@@ -6,10 +6,8 @@ using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
 using MobCentra.Infrastructure.Extensions;
 using Newtonsoft.Json;
-using RTools_NTS.Util;
 using System.Globalization;
 using System.Linq.Expressions;
-using static Grpc.Core.Metadata;
 
 namespace MobCentra.Application.Bll
 {
@@ -96,7 +94,7 @@ namespace MobCentra.Application.Bll
                 searchParameters.PinnedStatusId ??= -1;
                 searchParameters.Expression = new Func<Device, bool>(a =>
                     a.CompanyId == searchParameters.CompanyId
-                && (searchParameters.Description.IsNullOrEmpty() || a.Name.Contains(searchParameters?.Description))
+                && (searchParameters.Keyword.IsNullOrEmpty() || a.Name.Contains(searchParameters?.Keyword))
                 && (searchParameters.GroupId == null || a.GroupId == searchParameters.GroupId)
                 && (searchParameters.StatusId == -1 || (a.IsOnline == searchParameters.StatusId))
                 && (searchParameters.PinnedStatusId == -1 || ((searchParameters.PinnedStatusId == 1 && !a.UnpinedDate.HasValue) || (searchParameters.PinnedStatusId == 0 && a.UnpinedDate.HasValue)))

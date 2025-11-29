@@ -13,7 +13,7 @@ namespace MobCentra.Application.Bll
             {
                     searchParameters.Expression = new Func<BlackListApp, bool>(a => 
                     
-                    (a.Name == searchParameters?.Description || searchParameters.Description.IsNullOrEmpty())
+                    (a.Name == searchParameters?.Keyword || searchParameters.Keyword.IsNullOrEmpty())
                     && a.CompanyId == searchParameters.CompanyId
 
                     );

@@ -12,7 +12,7 @@ namespace MobCentra.Application.Bll
 
         public override async Task AddRangeAsync(List<DeviceFile> entities)
         {
-            if (entities.Any())
+            if (entities.Count != 0)
             {
                 var device = await deviceBll.FindByExpressionAsync(a => a.Code == entities[0].DeviceCode);
                 var dbData = await FindAllByExpressionAsync(a => a.DeviceId == device.Id);

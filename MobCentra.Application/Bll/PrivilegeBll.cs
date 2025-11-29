@@ -1,6 +1,7 @@
 ﻿using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
+using MobCentra.Infrastructure.Extensions;
 
 namespace MobCentra.Application.Bll
 {
@@ -11,7 +12,7 @@ namespace MobCentra.Application.Bll
             if (searchParameters is not null)
             {
                 if (!string.IsNullOrEmpty(searchParameters.Name))
-                    searchParameters.Expression = new Func<Privilege, bool>(a => a.PrivilegeName == searchParameters.Name);
+                    searchParameters.Expression = new Func<Privilege, bool>(a => (searchParameters.Keyword.IsNullOrEmpty() || a.PrivilegeName.Contains(searchParameters?.Keyword)));
             }
 
             var data = await base.GetAllAsync(searchParameters);

@@ -18,7 +18,7 @@ namespace MobCentra.Application.Bll
                 item.Result = await baseDal.ExecuteSQL(item.Query);
                 item.ResultOt = await baseDal.ExecuteSQL(item.QueryOt);
             }
-            data.Collections = data.Collections.OrderBy(a => a.SortOrder).ToList();
+            data.Collections = [.. data.Collections.OrderBy(a => a.SortOrder)];
             return data;
         }
     }

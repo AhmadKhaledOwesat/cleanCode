@@ -13,7 +13,7 @@ namespace MobCentra.Application.Bll
             if (searchParameters is not null)
             {
                 searchParameters.Expression = new Func<Setting, bool>(a => a.IsSystem == 0 && a.CompanyId == searchParameters.CompanyId
-                && (searchParameters.Term.IsNullOrEmpty() || a.SettingName.Contains(searchParameters.Term) )
+                && (searchParameters.Keyword.IsNullOrEmpty() || a.SettingName.Contains(searchParameters.Keyword) )
                 );
             }
 

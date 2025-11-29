@@ -6,5 +6,7 @@
         public string UserName { get; set; }
         public Guid GoogleCommandId { get; set; }
         public string GoogleCommandName { get; set; }
+        public string GoogleCommandNameEn { get; set; }
+
     }
 }

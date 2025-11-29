@@ -69,7 +69,11 @@ namespace MobCentra.Application.Mapper
             CreateMap<PageResult<Domain.Entities.Application>, PageResult<ApplicationDto>>().ReverseMap();
             CreateMap<Domain.Entities.Application, ApplicationDto>().ReverseMap();
             CreateMap<PageResult<UserCommand>, PageResult<UserCommandDto>>().ReverseMap();
-            CreateMap<UserCommand, UserCommandDto>().ReverseMap();
+            CreateMap<UserCommand, UserCommandDto>()
+                     .ForMember(dest => dest.GoogleCommandName, src => src.MapFrom(a => a.GoogleCommand == null ? string.Empty : a.GoogleCommand.Name))
+                    .ForMember(dest => dest.GoogleCommandNameEn, src => src.MapFrom(a => a.GoogleCommand == null ? string.Empty : a.GoogleCommand.NameEn))
+                .ReverseMap();
+
             CreateMap<PageResult<UserGroup>, PageResult<UserGroupDto>>().ReverseMap();
             CreateMap<UserGroup, UserGroupDto>().ReverseMap();
             CreateMap<PageResult<CompanySubscription>, PageResult<CompanySubscriptionDto>>().ReverseMap();

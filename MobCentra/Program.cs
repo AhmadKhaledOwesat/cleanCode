@@ -564,7 +564,31 @@ public class ScreenHub : Hub
             throw;
         }
     }
+    public async Task StopSharing(string deviceConnectionId)
+    {
+        try
+        {
+            if (_devices.TryGetValue(deviceConnectionId, out var deviceInfo))
+            {
+                Console.WriteLine($"Stop sharing command sent: Viewer {Context.ConnectionId} -> Device {deviceInfo.DeviceName} ({deviceConnectionId})");
 
+                // Send stop sharing command directly to the device
+                await Clients.Client(deviceConnectionId).SendAsync("StopSharingCommand", Context.ConnectionId);
+
+                Console.WriteLine($"Stop sharing command delivered to device");
+            }
+            else
+            {
+                Console.WriteLine($"Device not found: {deviceConnectionId}");
+                throw new Exception("Device not found");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR in StopSharing: {ex.Message}");
+            throw;
+        }
+    }
     // Called when a web client requests the current screen size
     public void RequestScreenSize()
     {

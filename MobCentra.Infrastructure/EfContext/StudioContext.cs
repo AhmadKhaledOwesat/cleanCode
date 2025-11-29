@@ -7,6 +7,7 @@ namespace MobCentra.Infrastructure.EfContext
     public class StudioContext(DbContextOptions<StudioContext> dbContextOptions) : DbContext(dbContextOptions)
     {
         public DbSet<Feature> Features { get; set; }
+        public DbSet<GeoFencSetting> GeoFencSettings { get; set; }
         public DbSet<DeviceUsage> DeviceUsages { get; set; }
         public DbSet<Users> Users { get; set; }
         public DbSet<DeviceQueu> DeviceQueu { get; set; }

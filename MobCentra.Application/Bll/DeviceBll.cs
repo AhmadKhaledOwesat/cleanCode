@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using MobCentra.Application.Dto;
+using MobCentra.Application.Interfaces;
 using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
@@ -8,10 +9,11 @@ using Newtonsoft.Json;
 using RTools_NTS.Util;
 using System.Globalization;
 using System.Linq.Expressions;
+using static Grpc.Core.Metadata;
 
 namespace MobCentra.Application.Bll
 {
-    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal,INotificationBll notificationBll,IDeviceBatteryTransBll deviceBatteryTransBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
+    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal, INotificationBll notificationBll, IDeviceBatteryTransBll deviceBatteryTransBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IGeoFencSettingBll geoFencSettingBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
     {
 
         public override async Task AddAsync(Device entity)
@@ -78,13 +80,13 @@ namespace MobCentra.Application.Bll
 
         public async Task<DcpResponse<bool>> UploadImageAndSendCommandAsync(ImageDto imageDto)
         {
-            if(imageDto is not null)
+            if (imageDto is not null)
             {
-                var imagePath = await imageDto.Image.UplodaFiles(".png", "images",Guid.NewGuid().ToString());
+                var imagePath = await imageDto.Image.UplodaFiles(".png", "images", Guid.NewGuid().ToString());
                 await SendCommandAsync(new SendCommandDto { Command = "changeWallPaper", WallpaperUrl = imagePath, Token = imageDto.Token });
                 return new DcpResponse<bool>(true);
             }
-            return new DcpResponse<bool>(false,"الرجاء المحاولة لاحقاً");
+            return new DcpResponse<bool>(false, "الرجاء المحاولة لاحقاً");
         }
         public override async Task<PageResult<Device>> GetAllAsync(DeviceFilter searchParameters)
         {
@@ -479,11 +481,23 @@ namespace MobCentra.Application.Bll
             if (geoFenc != null)
             {
                 record.CurrentLocation.SRID = geoFenc.Area.SRID;
+                var geoFencSetting = await geoFencSettingBll.FindLastByExpressionAsync(a => a.CompanyId == record.CompanyId);
+
                 bool isInside = geoFenc.Area.Contains(record.CurrentLocation);
                 if (!isInside)
                 {
                     record.GeoFencDate = DateTime.Now;
-                    string body = $@"Dear Sir/Madam,
+                    if (geoFencSetting?.ActionType == Domain.Enum.GeoFencType.Command)
+                        await HandleGeFencCommandAsync(record, geoFencSetting);
+                    else
+                        await HandleGeFencEmailAsync(record, toEmail);
+                }
+            }
+        }
+
+        private async Task HandleGeFencEmailAsync(Device record, Setting toEmail)
+        {
+            string body = $@"Dear Sir/Madam,
 <br/>
 This is an automated notification from Mobcentra.
 <br/>
@@ -502,8 +516,15 @@ Please review this event in the MDM dashboard and take appropriate action if nee
 Best regards,
 <br/>
 Mobcentra – Centralizing Your Mobile World";
-                    await emailSender.SendAsync("Geofence notification", body, toEmail.SettingValue);
-                }
+            await emailSender.SendAsync("Geofence notification", body, toEmail.SettingValue);
+        }
+
+        private async Task HandleGeFencCommandAsync(Device record, GeoFencSetting geoFencSetting)
+        {
+            string[] commands = geoFencSetting.Commands.Split(",") ?? [];
+            foreach (var item in commands)
+            {
+                await SendCommandAsync(new SendCommandDto { Command = item.Trim(), Token = [record.Token] });
             }
         }
 
@@ -512,7 +533,7 @@ Mobcentra – Centralizing Your Mobile World";
 
             if (record.BatteryDate.HasValue && DateTime.Now.Date == record.BatteryDate.Value.Date) return;
 
-            
+
             if (!record.BatteryPercentage.IsNullOrEmpty() && Convert.ToInt32(record.BatteryPercentage) <= Convert.ToInt16(setting.SettingValue))
             {
                 record.BatteryDate = DateTime.Now;

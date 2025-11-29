@@ -76,6 +76,9 @@ namespace MobCentra.Application.Mapper
             CreateMap<CompanySubscription, CompanySubscriptionDto>().ReverseMap();
             CreateMap<PageResult<GeoFenc>, PageResult<GeoFencDto>>().ReverseMap();
             CreateMap<GeoFenc, GeoFencDto>().ReverseMap();
+            CreateMap<GeoFencSetting, GeoFencSettingDto>().ReverseMap();
+            CreateMap<PageResult<GeoFencSetting>, PageResult<GeoFencSettingDto>>().ReverseMap();
+
             CreateMap<PageResult<Company>, PageResult<CompanyDto>>().ReverseMap();
             CreateMap<Device, DeviceDto>()
                     .ForMember(dest => dest.CompanyName, src => src.MapFrom(a => a.Company == null ? string.Empty : a.Company.NameAr))

@@ -66,6 +66,7 @@ namespace MobCentra.Application.DI
             serviceDescriptors.AddScoped<IAppUserBll, AppUserBll>();
             serviceDescriptors.AddScoped<ICompanyBll, CompanyBll>();
             serviceDescriptors.AddScoped<ITransactionBll, TransactionBll>();
+            serviceDescriptors.AddScoped<IGeoFencSettingBll, GeoFencSettingBll>();
             serviceDescriptors.AddScoped<ITasksBll, TasksBll>();
             serviceDescriptors.AddScoped<ICityBll, CityBll>();
             serviceDescriptors.AddScoped<IDeviceBll, DeviceBll>();

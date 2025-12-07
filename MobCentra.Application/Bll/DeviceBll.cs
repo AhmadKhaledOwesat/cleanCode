@@ -175,7 +175,6 @@ namespace MobCentra.Application.Bll
         /// <returns>Response containing settings status information</returns>
         public async Task<DcpResponse<object>> CheckSettingsAsync(Guid companyId)
         {
-            //TODO : use count
             // Get counts for groups, devices, and profiles
             var groupsCount = (await groupBll.Value.GetAllAsync(new GroupFilter { CompanyId = companyId })).Count;
             var devicesCount = (await base.GetAllAsync(new DeviceFilter { CompanyId = companyId })).Count;
@@ -195,7 +194,6 @@ namespace MobCentra.Application.Bll
         /// <returns>Response containing the count of devices needing updates</returns>
         public async Task<DcpResponse<int>> GetVersionCountAsync(Guid companyId)
         {
-            //TODO : use count
             // Get the latest app version
             var versions = await versionBll.GetAllAsync();
             var lastVersion = versions.LastOrDefault() ?? new Domain.Entities.Version() { VersionNumber = "1.0.0" };
@@ -628,10 +626,15 @@ namespace MobCentra.Application.Bll
                 if (!isInside)
                 {
                     record.GeoFencDate = DateTime.Now;
-                    if (geoFencSetting?.ActionType == Domain.Enum.GeoFencType.Command)
-                        await HandleGeFencCommandAsync(record, geoFencSetting);
-                    else
+
+                    if (geoFencSetting == null)
+                    {
                         await HandleGeFencEmailAsync(record, toEmail);
+                    }
+                    else
+                    {
+                        await HandleGeFencCommandAsync(record, geoFencSetting, toEmail);
+                    }
                 }
             }
         }
@@ -670,13 +673,20 @@ Mobcentra – Centralizing Your Mobile World";
         /// </summary>
         /// <param name="record">The device record that violated geofence</param>
         /// <param name="geoFencSetting">The geofence settings containing commands to execute</param>
-        private async Task HandleGeFencCommandAsync(Device record, GeoFencSetting geoFencSetting)
+        private async Task HandleGeFencCommandAsync(Device record, GeoFencSetting geoFencSetting, Setting toEmail)
         {
             string[] commands = geoFencSetting.Commands.Split(",") ?? [];
-            foreach (var item in commands)
+
+            if (commands.Contains("email"))
+            {
+                await HandleGeFencEmailAsync(record, toEmail);
+            }
+            foreach (var item in commands.Where(a=>a != "email"))
             {
                 await SendCommandAsync(new SendCommandDto { Command = item.Trim(), Token = [record.Token] });
             }
+
+           
         }
 
         /// <summary>

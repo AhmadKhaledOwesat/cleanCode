@@ -15,8 +15,8 @@ namespace MobCentra.Application.Bll
 
             foreach (var item in data.Collections)
             {
-                item.Result = await baseDal.ExecuteSQL(item.Query);
-                item.ResultOt = await baseDal.ExecuteSQL(item.QueryOt);
+                item.Result = await baseDal.ExecuteSqlAsync(item.Query);
+                item.ResultOt = await baseDal.ExecuteSqlAsync(item.QueryOt);
             }
             data.Collections = [.. data.Collections.OrderBy(a => a.SortOrder)];
             return data;

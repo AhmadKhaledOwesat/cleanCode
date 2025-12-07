@@ -1,25 +1,20 @@
-﻿using MobCentra.Application.Dto;
+﻿using Microsoft.AspNetCore.Mvc;
+using MobCentra.Application.Dto;
 using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace MobCentra.Controllers
 {
-   // [Authorize]
-    public class BaseController<T, TDto, TId, TFilter> : Controller
+    // [Authorize]
+    public class BaseController<T, TDto, TId, TFilter>(IBaseBll<T, TId, TFilter> _baseBll, IDcpMapper _mapper) : Controller
         where T : BaseEntity<TId>
         where TDto : BaseDto<TId>
         where TId : struct
     {
-        protected IDcpMapper mapper;
-        protected IBaseBll<T, TId, TFilter> baseBll;
-        public BaseController(IBaseBll<T, TId, TFilter> _baseBll, IDcpMapper _mapper)
-        {
-            mapper = _mapper;
-            baseBll = _baseBll;
-        }
+        protected IDcpMapper mapper = _mapper;
+        protected IBaseBll<T, TId, TFilter> baseBll = _baseBll;
+
         [HttpPost]
         [Route("")]
         [DisableRequestSizeLimit]
@@ -37,7 +32,7 @@ namespace MobCentra.Controllers
         {
             List<T> entities = mapper.Map<List<T>>(dtos);
             await baseBll.AddRangeAsync(entities);
-            return new DcpResponse<List<TId>>([.. entities.Select(a=>a.Id)]);
+            return new DcpResponse<List<TId>>([.. entities.Select(a => a.Id)]);
         }
 
         [HttpPost]

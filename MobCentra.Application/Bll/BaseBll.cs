@@ -97,5 +97,8 @@ namespace MobCentra.Application.Bll
         /// <param name="expression">Lambda expression to filter entities</param>
         /// <returns>The number of entities matching the expression</returns>
         public virtual async Task<int> GetCountByExpressionAsync(Expression<Func<T, bool>> expression) => await baseDal.GetCountByExpressionAsync(expression);
+
+        public virtual async Task<bool> IsAuthorizedAsync(Guid permssionId) => await baseDal.IsAuthorizedAsync(permssionId);
+
     }
 }

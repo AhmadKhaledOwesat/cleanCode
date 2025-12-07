@@ -38,7 +38,7 @@ namespace MobCentra.Application.Bll
         public async Task<DcpResponse<dynamic>> ExecuteReport(string query)
         {
             // Execute SQL query directly
-            dynamic data = await baseDal.ExecuteSQL(query);
+            dynamic data = await baseDal.ExecuteSqlAsync(query);
             return new DcpResponse<dynamic>(data);
         }
     }

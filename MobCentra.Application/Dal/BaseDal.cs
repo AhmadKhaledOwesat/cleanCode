@@ -75,6 +75,12 @@ namespace MobCentra.Application.Dal
             await efRepository.InsertRangeAsync(entities);
         }
 
-        public virtual async Task<dynamic> ExecuteSQL(string qry) => await efRepository.ExecuteSQL(qry);
+        public virtual async Task<dynamic> ExecuteSqlAsync(string qry) => await efRepository.ExecuteSQL(qry);
+
+        public async Task<bool> IsAuthorizedAsync(Guid permssionId)
+        {
+            var queryResult = await efRepository.ExecuteAsync($"select count('l') from RolePrivilege rp\r\n  join Roles r on r.Id = rp.RoleId\r\n  join UserRoles ur on ur.RoleId = r.Id\r\n  where ur.UserId = '{identityManager.CurrentUserId}' and rp.PrivilegeId = '{permssionId}'");
+            return queryResult[0] > 0;
+        }
     }
 }

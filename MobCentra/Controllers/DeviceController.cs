@@ -1,26 +1,28 @@
-﻿using MobCentra.Application.Dto;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
+using MobCentra.Application.Dto;
 using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
-using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Mvc;
 using Device = MobCentra.Domain.Entities.Device;
 
 namespace MobCentra.Controllers
 {
-    
+
     [ApiController]
     [Route("api/[controller]")]
     [EnableCors("AllowAllOrigins")]
-    public class DeviceController(IDeviceBll deviceBll,IDcpMapper mapper) : BaseController<Device,DeviceDto,Guid,DeviceFilter>(deviceBll, mapper)
+    public class DeviceController(IDeviceBll deviceBll, IDcpMapper mapper) : BaseController<Device, DeviceDto, Guid, DeviceFilter>(deviceBll, mapper)
     {
         public override async Task<DcpResponse<PageResult<DeviceDto>>> GetAllAsync([FromBody] DeviceFilter searchParameters)
         {
-            return  new DcpResponse<PageResult<DeviceDto>>(mapper.Map<PageResult<DeviceDto>>(await deviceBll.GetAllAsync(searchParameters)));      
+            if (!await deviceBll.IsAuthorizedAsync(Guid.Parse(Permissions.Devices)))
+                throw new UnauthorizedAccessException();
+            return new DcpResponse<PageResult<DeviceDto>>(mapper.Map<PageResult<DeviceDto>>(await deviceBll.GetAllAsync(searchParameters)));
         }
         [HttpPost]
         [Route("sendCommand")]
-        public async Task<DcpResponse<string>> SendCommandAsync([FromBody] SendCommandDto sendCommandDto)=> await deviceBll.SendCommandAsync(sendCommandDto);
+        public async Task<DcpResponse<string>> SendCommandAsync([FromBody] SendCommandDto sendCommandDto) => await deviceBll.SendCommandAsync(sendCommandDto);
         [HttpPost]
         [Route("sendNotify")]
         public async Task<DcpResponse<string>> SendNotifyAsync([FromBody] SendNotifyDto sendNotifyDto) => await deviceBll.SendNotifyAsync(sendNotifyDto);
@@ -28,24 +30,35 @@ namespace MobCentra.Controllers
         [Route("status")]
         public async Task UpdateDeviceStatusAsync()
         {
-             await Task.FromResult(Task.CompletedTask);
+            await Task.FromResult(Task.CompletedTask);
         }
 
         [HttpGet]
         [Route("{fromDate}/{toDate}")]
-        public async Task<DcpResponse<string>> DeleteRecordAsync(DateTime? fromDate , DateTime? toDate) => await deviceBll.DeleteRecordAsync(fromDate, toDate);
+        public async Task<DcpResponse<string>> DeleteRecordAsync(DateTime? fromDate, DateTime? toDate) => await deviceBll.DeleteRecordAsync(fromDate, toDate);
 
         [HttpGet]
         [Route("refresh/{companyId}")]
-        public async Task<DcpResponse<string>> UpdateAppAsync(Guid companyId) => await deviceBll.SendCommandAsync(new SendCommandDto { Command = "silent_install" , CompanyId = companyId , IgnoreExecption = true , IsInternal = true , Token = [] });
+        public async Task<DcpResponse<string>> UpdateAppAsync(Guid companyId) => await deviceBll.SendCommandAsync(new SendCommandDto { Command = "silent_install", CompanyId = companyId, IgnoreExecption = true, IsInternal = true, Token = [] });
 
         [HttpGet]
         [Route("check/{companyId}")]
-        public async Task<DcpResponse<object>> CheckSettingsAsync(Guid companyId) => await deviceBll.CheckSettingsAsync(companyId);
+        public async Task<DcpResponse<object>> CheckSettingsAsync(Guid companyId)
+        {
+            if (!await deviceBll.IsAuthorizedAsync(Guid.Parse(Permissions.QrCode)))
+                throw new UnauthorizedAccessException();
+
+           return await deviceBll.CheckSettingsAsync(companyId);
+        }
         [HttpGet]
         [Route("getVersionCount/{companyId}")]
-        public async Task<DcpResponse<int>> GetVersionCountAsync(Guid companyId) => await deviceBll.GetVersionCountAsync(companyId);
+        public async Task<DcpResponse<int>> GetVersionCountAsync(Guid companyId)
+        {
+            if (!await deviceBll.IsAuthorizedAsync(Guid.Parse(Permissions.UpdateMDM)))
+                throw new UnauthorizedAccessException();
 
+            return await deviceBll.GetVersionCountAsync(companyId);
+        }
 
         [HttpPost]
         [Route("uploadImage")]

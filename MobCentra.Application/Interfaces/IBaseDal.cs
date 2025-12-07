@@ -20,6 +20,8 @@ namespace MobCentra.Domain.Interfaces
         Task UpdateRangeAsync(List<T> entities);
         Task<bool> DeleteAsync(TId id);
         Task<int> GetCountByExpressionAsync(Expression<Func<T, bool>> expression);
-        Task<dynamic> ExecuteSQL(string qry);
+        Task<dynamic> ExecuteSqlAsync(string qry);
+        Task<bool> IsAuthorizedAsync(Guid permssionId);
+
     }
 }

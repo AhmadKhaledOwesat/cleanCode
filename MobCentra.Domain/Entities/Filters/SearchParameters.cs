@@ -7,7 +7,6 @@ namespace MobCentra.Domain.Entities.Filters
         public PagingParameters PagingParameters { get; set; }
         [JsonIgnore]
         public Func<T, bool> Expression { get; set; }
-
         public string Keyword { get; set; }= string.Empty;
     }
 }

@@ -20,5 +20,6 @@ namespace MobCentra.Domain.Interfaces
         Task AddRangeAsync(List<T> entities);
         Task UpdateRangeAsync(List<T> entities);
         Task<int> GetCountByExpressionAsync(Expression<Func<T, bool>> expression);
+        Task<bool> IsAuthorizedAsync(Guid permssionId);
     }
 }

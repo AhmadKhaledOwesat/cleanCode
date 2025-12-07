@@ -7,7 +7,7 @@ namespace MobCentra.Application.Bll
 {
     public class DeviceBatteryTransBll(IBaseDal<DeviceBatteryTrans, Guid, DeviceBatteryTransFilter> baseDal) : BaseBll<DeviceBatteryTrans, Guid, DeviceBatteryTransFilter>(baseDal), IDeviceBatteryTransBll
     {
-        public override Task<PageResult<DeviceBatteryTrans>> GetAllAsync(DeviceBatteryTransFilter searchParameters)
+        public override async Task<PageResult<DeviceBatteryTrans>> GetAllAsync(DeviceBatteryTransFilter searchParameters)
         {
             if (searchParameters is not null)
             {
@@ -17,7 +17,9 @@ namespace MobCentra.Application.Bll
                   );
             }
 
-            return base.GetAllAsync(searchParameters);
+            var dta = await base.GetAllAsync(searchParameters);
+            dta.Collections = [.. dta.Collections.OrderByDescending(a => a.CreatedDate)];
+            return dta;
         }
     }
 }

@@ -5,6 +5,8 @@ namespace MobCentra.Application.Dto
     {
         public string ReportName { get; set; }
         public string ReportProcedure { get; set; }
+        public string ReportNameEn { get; set; }
+
         public Guid? CompanyId { get; set; }
         public ICollection<ReportParameterDto> ReportParameters { get; set; } = [];
     }

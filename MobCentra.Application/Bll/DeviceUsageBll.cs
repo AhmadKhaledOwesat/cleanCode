@@ -22,6 +22,7 @@ namespace MobCentra.Application.Bll
         public override async Task AddAsync(DeviceUsage entity)
         {
             entity.DeviceId = (await deviceBll.FindByExpressionAsync(a => a.Code == entity.DeviceCode)).Id;
+            await base.DeleteRangeAsync(await base.FindAllByExpressionAsync(a => a.DeviceId == entity.DeviceId));
             await base.AddAsync(entity);
         }
         public override async Task AddRangeAsync(List<DeviceUsage> entities)

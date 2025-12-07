@@ -1,4 +1,5 @@
-﻿using MobCentra.Domain.Entities.Filters;
+﻿using MobCentra.Application.Interfaces;
+using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
 using MobCentra.Infrastructure.Extensions;
 using Group = MobCentra.Domain.Entities.Group;
@@ -8,7 +9,7 @@ namespace MobCentra.Application.Bll
     /// <summary>
     /// Business logic layer for group management operations
     /// </summary>
-    public class GroupBll(IBaseDal<Group, Guid, GroupFilter> baseDal,IConstraintBll constraintBll) : BaseBll<Group, Guid, GroupFilter>(baseDal), IGroupBll
+    public class GroupBll(IBaseDal<Group, Guid, GroupFilter> baseDal,IConstraintBll constraintBll,IIdentityManager<Guid> identityManager,IUserGroupBll userGroupBll) : BaseBll<Group, Guid, GroupFilter>(baseDal), IGroupBll
     {
         /// <summary>
         /// Retrieves groups with filtering by keyword (name in Arabic or Other), company, and active status
@@ -36,9 +37,11 @@ namespace MobCentra.Application.Bll
         /// <param name="entity">The group entity to add</param>
         public override async Task AddAsync(Group entity)
         {
+            var userId = identityManager.CurrentUserId;
             // Check if company has reached the maximum number of groups limit
             await constraintBll.GetLimitAsync(entity.CompanyId.Value, Domain.Enum.LimitType.NoOfGroups);
             await base.AddAsync(entity);
+            await userGroupBll.AddAsync(new Domain.Entities.UserGroup { GroupId = entity.Id , Group = null , User =null , UserId = userId });
         }
     }
 }

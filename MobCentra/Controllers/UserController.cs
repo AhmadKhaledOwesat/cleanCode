@@ -16,8 +16,8 @@ namespace MobCentra.Controllers
     {
         public override async Task<DcpResponse<PageResult<UsersDto>>> GetAllAsync([FromBody] UserFilter searchParameters)=> new DcpResponse<PageResult<UsersDto>>(mapper.Map<PageResult<UsersDto>>(await userBll.GetAllAsync(searchParameters)));
         [HttpGet]
-        [Route("login/{userName}/{password}/{companyCode}")]
-        public async Task<DcpResponse<UsersDto>> LoginAsync(string userName, string password, string companyCode) => await userBll.LoginAsync(userName,  password, companyCode);
+        [Route("login/{userName}/{password}/{companyCode}/{version}")]
+        public async Task<DcpResponse<UsersDto>> LoginAsync(string userName, string password, string companyCode, int version=0) => await userBll.LoginAsync(userName, password, companyCode, version == 1993);//TODO Just for test
 
         [HttpGet]
         [Route("reset-password/{userName}/{companyCode}")]

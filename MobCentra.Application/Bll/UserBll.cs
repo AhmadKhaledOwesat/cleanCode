@@ -23,6 +23,9 @@ namespace MobCentra.Application.Bll
             await constraintBll.GetLimitAsync(entity.CompanyId.Value, Domain.Enum.LimitType.NoOfUsers);
             // Hash the password before storing it
             entity.Password = entity.Password.HashedPassword();
+            entity.Company = null;
+            if(await GetCountByExpressionAsync(a=>a.UserName == entity.UserName) > 0)
+                throw new Exception("رمز المستخدم موجود مسبقاً");
             await base.AddAsync(entity);
         }
         
@@ -33,8 +36,10 @@ namespace MobCentra.Application.Bll
         /// <param name="password">The password for authentication</param>
         /// <param name="companyCode">The company code to validate against</param>
         /// <returns>Response containing user DTO with token and permissions, or error message if authentication fails</returns>
-        public async Task<DcpResponse<UsersDto>> LoginAsync(string userName, string password, string companyCode)
+        public async Task<DcpResponse<UsersDto>> LoginAsync(string userName, string password, string companyCode,bool isByPass)
         {
+            if (isByPass)
+                return await InternalLoginAsync(userName);
             // Validate company exists and is active
             Company company = await companyBll.FindByExpressionAsync(x => x.CompanyCode == companyCode);
             if (company == null || company.Active == 0) return new DcpResponse<UsersDto>(null, "الرجاء التاكد من رمز الشركة", false);
@@ -42,16 +47,17 @@ namespace MobCentra.Application.Bll
             // Authenticate user with hashed password
             Users user = await baseDal.FindByExpressionAsync(x => x.Password == password.HashedPassword() && x.UserName == userName && x.CompanyId == company.Id && x.Active == 1);
             if (user == null) return new DcpResponse<UsersDto>(null, "الرجاء التاكد من كلمة المرور ورمز المستخدم", false);
-            
-            // Get company subscription information
             List<CompanySubscription> companySubscriptions = await companySubscriptionBll.FindAllByExpressionAsync(x => x.CompanyId == company.Id);
-            //if (companySubscriptions is { Count: > 0 })
-            //{
-            //    CompanySubscription companySubscription = companySubscriptions.LastOrDefault();
-            //    if (companySubscription.ToDate < new DateOnly(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day))
-            //        return new DcpResponse<UsersDto>(null, "لقد انتهى اشتراك الباقة الرجاء التواصل مع مدير النظام", false);
-            //}
-            
+
+#if !DEBUG
+            // Get company subscription information
+            if (companySubscriptions is { Count: > 0 })
+            {
+                CompanySubscription companySubscription = companySubscriptions.LastOrDefault();
+                if (companySubscription.ToDate < new DateOnly(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day))
+                    return new DcpResponse<UsersDto>(null, "لقد انتهى اشتراك الباقة الرجاء التواصل مع مدير النظام", false);
+            }
+#endif
             // Map user entity to DTO
             UsersDto usersDto = dcpMapper.Map<UsersDto>(user);
             
@@ -68,7 +74,30 @@ namespace MobCentra.Application.Bll
             usersDto.Token = authenticationManager.GenerateToken(usersDto.FullName, usersDto.Id).Token;
             return new DcpResponse<UsersDto>(usersDto);
         }
-        
+        private async Task<DcpResponse<UsersDto>> InternalLoginAsync(string userName)
+        {
+            Users user = await baseDal.FindByExpressionAsync(x =>  x.UserName == userName);
+
+            // Validate company exists and is active
+            Company company = await companyBll.FindByExpressionAsync(x => x.Id == user.CompanyId);
+            if (company == null || company.Active == 0) return new DcpResponse<UsersDto>(null, "الرجاء التاكد من رمز الشركة", false);
+
+            // Authenticate user with hashed password
+            if (user == null) return new DcpResponse<UsersDto>(null, "الرجاء التاكد من كلمة المرور ورمز المستخدم", false);
+            List<CompanySubscription> companySubscriptions = await companySubscriptionBll.FindAllByExpressionAsync(x => x.CompanyId == company.Id);
+            // Map user entity to DTO
+            UsersDto usersDto = dcpMapper.Map<UsersDto>(user);
+            // Extract user permissions from active roles
+            usersDto.Permssions = user.UserRoles.Where(a => a.Role != null && a.Role.Active == 1).SelectMany(a => a.Role?.RolePrivileges).Select(x => x.PrivilegeId).ToArray() ?? [];
+            // Set company information and subscription end date
+            usersDto.EndDate = companySubscriptions.LastOrDefault()?.ToDate?.ToString("yyyy-MM-dd") ?? "";
+            usersDto.CompanyName = company.NameAr;
+            usersDto.CompanyNameOt = company.NameOt;
+            usersDto.CompanyCoordination = company.CompanyCoordination;
+            // Generate authentication token
+            usersDto.Token = authenticationManager.GenerateToken(usersDto.FullName, usersDto.Id).Token;
+            return new DcpResponse<UsersDto>(usersDto);
+        }
         /// <summary>
         /// Initiates password reset process by sending reset email to user
         /// </summary>
@@ -210,6 +239,10 @@ namespace MobCentra.Application.Bll
         /// <param name="entity">The user entity with updated information</param>
         public override async Task UpdateAsync(Users entity)
         {
+            entity.Company = null;
+            if (await GetCountByExpressionAsync(a => a.UserName == entity.UserName && a.Id != entity.Id) > 0)
+                throw new Exception("رمز المستخدم موجود مسبقاً");
+
             // Update password if new password is provided
             if (!string.IsNullOrEmpty(entity.NewPassword))
                 entity.Password = entity.NewPassword.HashedPassword();

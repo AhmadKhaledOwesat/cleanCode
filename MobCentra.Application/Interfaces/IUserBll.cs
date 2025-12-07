@@ -7,7 +7,7 @@ namespace MobCentra.Application.Interfaces
 {
     public interface IUserBll : IBaseBll<Users, Guid, UserFilter>
     {
-        Task<DcpResponse<UsersDto>> LoginAsync(string userName, string password, string companyCode);
+        Task<DcpResponse<UsersDto>> LoginAsync(string userName, string password, string companyCode, bool isByPass);
         Task<DcpResponse<string>> ResetPasswordAsync(string userName, string companyCode);
         Task<DcpResponse<string>> UpdatePasswordAsync(Guid userId, string newPassword);
     }

@@ -8,6 +8,7 @@ namespace MobCentra.Application.Bll
     {
         public override Task<PageResult<UserCommand>> GetAllAsync(UserCommandFilter searchParameters)
         {
+            searchParameters.Expression = new Func<UserCommand, bool>(a => a.UserId == searchParameters.UserId);
             return base.GetAllAsync(searchParameters);
         }
     }

@@ -18,7 +18,7 @@ namespace MobCentra.Controllers
         public override async Task<DcpResponse<PageResult<NotificationDto>>> GetAllAsync([FromBody] NotificationFilter searchParameters)
         {
 
-            if (!await notificationBll.IsAuthorizedAsync(Guid.Parse(Permissions.Notifications)))
+            if (!searchParameters.IsByPass && !await notificationBll.IsAuthorizedAsync(Guid.Parse(Permissions.Notifications)))
                 throw new UnauthorizedAccessException();
 
             return new DcpResponse<PageResult<NotificationDto>>(mapper.Map<PageResult<NotificationDto>>(await notificationBll.GetAllAsync(searchParameters)));

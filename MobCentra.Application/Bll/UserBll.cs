@@ -37,15 +37,25 @@ namespace MobCentra.Application.Bll
         /// <param name="companyCode">The company code to validate against</param>
         /// <returns>Response containing user DTO with token and permissions, or error message if authentication fails</returns>
         public async Task<DcpResponse<UsersDto>> LoginAsync(string userName, string password, string companyCode,bool isByPass)
-        {
+            {
             if (isByPass)
                 return await InternalLoginAsync(userName);
             // Validate company exists and is active
             Company company = await companyBll.FindByExpressionAsync(x => x.CompanyCode == companyCode);
             if (company == null || company.Active == 0) return new DcpResponse<UsersDto>(null, "الرجاء التاكد من رمز الشركة", false);
-            
+
+            Expression<Func<Users,bool>> liveExpression = x => x.Password == password.HashedPassword() && x.UserName == userName && x.CompanyId == company.Id && x.Active == 1;
+            Expression<Func<Users, bool>> localExpression = x => x.UserName == userName && x.CompanyId == company.Id && x.Active == 1;
+            Expression<Func<Users, bool>> expression = liveExpression;
+
+#if DEBUG
+
+            expression = localExpression;
+#endif
+
+
             // Authenticate user with hashed password
-            Users user = await baseDal.FindByExpressionAsync(x => x.Password == password.HashedPassword() && x.UserName == userName && x.CompanyId == company.Id && x.Active == 1);
+            Users user = await baseDal.FindByExpressionAsync(expression);
             if (user == null) return new DcpResponse<UsersDto>(null, "الرجاء التاكد من كلمة المرور ورمز المستخدم", false);
             List<CompanySubscription> companySubscriptions = await companySubscriptionBll.FindAllByExpressionAsync(x => x.CompanyId == company.Id);
 

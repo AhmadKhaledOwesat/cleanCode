@@ -4,6 +4,7 @@
     {
         public string SettingName { get; set; }
         public string DisplayName { get; set; }
+        public string DisplayNameOt { get; set; }
         public string SettingValue { get; set; }
         public string SettingValueOt { get; set; }
         public int IsMedia { get; set; }

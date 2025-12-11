@@ -1,26 +1,25 @@
-﻿using MobCentra.Application.Bll;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using MobCentra.Application.Dto;
 using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
-using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Mvc;
 using Profile = MobCentra.Domain.Entities.Profile;
 
 namespace MobCentra.Controllers
 {
-    
+
     [ApiController]
     [Route("api/[controller]")]
     [EnableCors("AllowAllOrigins")]
-    public class ProfileController(IProfileBll profileBll,IDcpMapper mapper) : BaseController<Profile,ProfileDto,Guid,ProfileFilter>(profileBll, mapper)
+    public class ProfileController(IProfileBll profileBll, IDcpMapper mapper) : BaseController<Profile, ProfileDto, Guid, ProfileFilter>(profileBll, mapper)
     {
         public override async Task<DcpResponse<PageResult<ProfileDto>>> GetAllAsync([FromBody] ProfileFilter searchParameters)
         {
-            if (!await profileBll.IsAuthorizedAsync(Guid.Parse(Permissions.Profile)))
+            if (!searchParameters.IsByPass && !await profileBll.IsAuthorizedAsync(Guid.Parse(Permissions.Profile)))
                 throw new UnauthorizedAccessException();
 
-            return new DcpResponse<PageResult<ProfileDto>>(mapper.Map<PageResult<ProfileDto>>(await profileBll.GetAllAsync(searchParameters)));      
+            return new DcpResponse<PageResult<ProfileDto>>(mapper.Map<PageResult<ProfileDto>>(await profileBll.GetAllAsync(searchParameters)));
         }
         [HttpGet]
         [Route("device/{id}")]

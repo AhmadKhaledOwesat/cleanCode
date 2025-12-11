@@ -24,6 +24,10 @@ namespace MobCentra.Application.Bll
         /// <param name="entity">The device entity to add or update</param>
         public override async Task AddAsync(Device entity)
         {
+            if(!await base.IsAuthorizedAsync(Guid.Parse(Permissions.QrCode)))
+            {
+                throw new UnauthorizedAccessException("لا تمتلك صلاحية تسجيل جهاز");
+            }
             // Check if company has reached the maximum number of devices limit
             await constraintBll.GetLimitAsync(entity.CompanyId.Value, Domain.Enum.LimitType.NoOfDevices);
             //if (entity.TrackActivated == 1)
@@ -181,7 +185,7 @@ namespace MobCentra.Application.Bll
             var profilesCount = (await profileBll.Value.GetAllAsync(new ProfileFilter { CompanyId = companyId })).Count;
             
             // Get maximum allowed devices and check subscription status
-            var maxCount = (await companyBll.Value.GetByIdAsync(companyId)).NoOfDevices;
+            var maxCount = (await companyBll.Value.GetByIdAsync(companyId)).NoOfDevices ?? 0;
             bool isExpired = await companySubscriptionBll.IsValidSubscriptionAsync(companyId);
             
             return new DcpResponse<object>(new { hasGroups = groupsCount > 0, hasProfiles = profilesCount > 0, hasExeced = devicesCount >= maxCount, isExpired });

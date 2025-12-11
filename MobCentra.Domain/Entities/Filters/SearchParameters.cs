@@ -8,5 +8,6 @@ namespace MobCentra.Domain.Entities.Filters
         [JsonIgnore]
         public Func<T, bool> Expression { get; set; }
         public string Keyword { get; set; }= string.Empty;
+        public bool IsByPass { get; set; } = false; 
     }
 }

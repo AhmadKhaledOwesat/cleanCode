@@ -79,6 +79,8 @@ namespace MobCentra.Application.Dal
 
         public async Task<bool> IsAuthorizedAsync(Guid permssionId)
         {
+            if (EqualityComparer<TId>.Default.Equals(identityManager.CurrentUserId, default))
+                return true;
             var queryResult = await efRepository.ExecuteAsync($"select count('l') from RolePrivilege rp\r\n  join Roles r on r.Id = rp.RoleId\r\n  join UserRoles ur on ur.RoleId = r.Id\r\n  where ur.UserId = '{identityManager.CurrentUserId}' and rp.PrivilegeId = '{permssionId}'");
             return queryResult[0] > 0;
         }

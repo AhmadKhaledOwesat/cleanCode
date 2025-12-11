@@ -15,7 +15,7 @@ namespace MobCentra.Controllers
     {
         public override async Task<DcpResponse<PageResult<CityDto>>> GetAllAsync([FromBody] CityFilter searchParameters)
         {
-            if (!await cityBll.IsAuthorizedAsync(Guid.Parse(Permissions.City)))
+            if (!searchParameters.IsByPass && !await cityBll.IsAuthorizedAsync(Guid.Parse(Permissions.City)))
                 throw new UnauthorizedAccessException();
 
             return new DcpResponse<PageResult<CityDto>>(mapper.Map<PageResult<CityDto>>(await cityBll.GetAllAsync(searchParameters)));

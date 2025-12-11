@@ -15,7 +15,7 @@ namespace MobCentra.Controllers
     {
         public override async Task<DcpResponse<PageResult<SettingDto>>> GetAllAsync([FromBody] SettingFilter searchParameters)
         {
-            if (!await settingBll.IsAuthorizedAsync(Guid.Parse(Permissions.Settings)))
+            if (!searchParameters.IsByPass && !await settingBll.IsAuthorizedAsync(Guid.Parse(Permissions.Settings)))
                 throw new UnauthorizedAccessException();
 
             return new DcpResponse<PageResult<SettingDto>>(mapper.Map<PageResult<SettingDto>>(await settingBll.GetAllAsync(searchParameters)));
@@ -28,7 +28,12 @@ namespace MobCentra.Controllers
         {
             return new DcpResponse<PageResult<SettingDto>>(mapper.Map<PageResult<SettingDto>>(await settingBll.GetSettingsAsync(deviceCode, settingName)));
         }
-
+        [HttpGet]
+        [Route("byKey/{settingName}")]
+        public async Task<DcpResponse<SettingDto>> GetSettingByKeyAsync([FromRoute] string settingName)
+        {
+            return new DcpResponse<SettingDto>(mapper.Map<SettingDto>(await settingBll.GetSettingByKeyAsync(settingName)));
+        }
 
     }
 }

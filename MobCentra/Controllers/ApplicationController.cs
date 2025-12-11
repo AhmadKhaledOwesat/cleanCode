@@ -15,7 +15,7 @@ namespace MobCentra.Controllers
     {
         public override async Task<DcpResponse<PageResult<ApplicationDto>>> GetAllAsync([FromBody] ApplicationFilter searchParameters)
         {
-            if (!await applicationBll.IsAuthorizedAsync(Guid.Parse(Permissions.Apks)))
+            if (!searchParameters.IsByPass && !await applicationBll.IsAuthorizedAsync(Guid.Parse(Permissions.Apks)))
                 throw new UnauthorizedAccessException();
 
             return new DcpResponse<PageResult<ApplicationDto>>(mapper.Map<PageResult<ApplicationDto>>(await applicationBll.GetAllAsync(searchParameters)));

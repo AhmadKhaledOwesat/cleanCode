@@ -40,5 +40,10 @@ namespace MobCentra.Application.Bll
             var device = await deviceBll.Value.FindByExpressionAsync(a=>a.Code == deviceCode);
             return await GetAllAsync(new SettingFilter { CompanyId = device.CompanyId , Term = settingName });
         }
+
+        public async Task<Setting> GetSettingByKeyAsync(string settingName)
+        {
+            return await FindByExpressionAsync(a=>a.SettingName == settingName);
+        }
     }
 }

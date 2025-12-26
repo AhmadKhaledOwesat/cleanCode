@@ -76,6 +76,7 @@ namespace MobCentra.Application.Bll
                 entity.SystemSpace ??= record.SystemSpace;
                 entity.AppVersion ??= record.AppVersion;
                 entity.BatteryDate ??= record.BatteryDate;
+                entity.DeviceDateTime ??= record.DeviceDateTime;
                 entity.GeoFencDate ??= record.GeoFencDate;
                 entity.TrackActivated ??= record.TrackActivated;
                 await base.UpdateAsync(entity);
@@ -142,16 +143,29 @@ namespace MobCentra.Application.Bll
             
             // Get refresh time setting to determine online status
             var setting = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.RefreshTime" && a.CompanyId == searchParameters.CompanyId);
+            var deviceTimeMargin = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.CheckTimeMargin" && a.CompanyId == searchParameters.CompanyId);
 
             // Update online status based on last seen time
             if (setting != null)
             {
                 foreach (var device in data.Collections)
                 {
+                    
                     if (device.LastSeenDate == null) continue;
 
                     DateTime lastSeenDate = device.LastSeenDate.Value;
 
+                    if (deviceTimeMargin is not null)
+                    {
+                        if(device.DeviceDateTime is null)
+                        {
+                            device.IsWrongTime = true;
+                        }
+                        else
+                        {
+                            device.IsWrongTime = lastSeenDate.Subtract(device.DeviceDateTime.Value).TotalSeconds > int.Parse(deviceTimeMargin.SettingValue);
+                        }
+                    }
                     // Calculate seconds since device was last seen
                     int secondsSinceLastSeen = (int)(DateTime.Now - lastSeenDate).TotalSeconds;
 
@@ -469,6 +483,7 @@ namespace MobCentra.Application.Bll
             entity.SystemSpace ??= record.SystemSpace;
             entity.AppVersion ??= record.AppVersion;
             entity.BatteryDate ??= record.BatteryDate;
+            entity.DeviceDateTime ??= record.DeviceDateTime;
             entity.GeoFencDate ??= record.GeoFencDate;
             entity.TrackActivated ??= record.TrackActivated;
             if (!entity.IsFromBackOffice)
@@ -528,6 +543,7 @@ namespace MobCentra.Application.Bll
         /// <exception cref="Exception">Thrown if subscription is not valid</exception>
         private async Task CheckSubscriptionAsync(Device record)
         {
+            if (!record.CompanyId.HasValue) return;
             bool isValidSubscription = await companySubscriptionBll.IsValidSubscriptionAsync(record.CompanyId.Value);
             if (!isValidSubscription)
                 throw new Exception("لقد انتهى اشتراك الباقة الرجاء التواصل مع مدير النظام");
@@ -687,7 +703,15 @@ Mobcentra – Centralizing Your Mobile World";
             }
             foreach (var item in commands.Where(a=>a != "email"))
             {
-                await SendCommandAsync(new SendCommandDto { Command = item.Trim(), Token = [record.Token] });
+                try
+                {
+                    await SendCommandAsync(new SendCommandDto { Command = item.Trim(), Token = [record.Token] });
+
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
             }
 
            

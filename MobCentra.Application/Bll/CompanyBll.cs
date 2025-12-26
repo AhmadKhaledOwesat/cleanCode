@@ -11,7 +11,7 @@ namespace MobCentra.Application.Bll
     /// <summary>
     /// Business logic layer for company management operations
     /// </summary>
-    public class CompanyBll(IBaseDal<Company,Guid,CompanyFilter> baseDal,IDcpMapper dcpMapper,IDeviceBll deviceBll,Lazy<IUserBll> userBll) : BaseBll<Company,Guid,CompanyFilter>(baseDal) , ICompanyBll
+    public class CompanyBll(IBaseDal<Company,Guid,CompanyFilter> baseDal,IDcpMapper dcpMapper,IDeviceBll deviceBll,Lazy<IUserBll> userBll,IAuthenticationManager authenticationManager) : BaseBll<Company,Guid,CompanyFilter>(baseDal) , ICompanyBll
     {
         /// <summary>
         /// Authenticates a company login by validating company code, user credentials, and device limits
@@ -39,6 +39,7 @@ namespace MobCentra.Application.Bll
             
             // Map company to DTO and return
             CompanyDto usersDto = dcpMapper.Map<CompanyDto>(company);
+            usersDto.Token = authenticationManager.GenerateToken(userName, users.Id).Token;   
             return new DcpResponse<CompanyDto>(usersDto);
         }
         

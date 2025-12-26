@@ -26,6 +26,8 @@ namespace MobCentra.Application.Dto
         public Guid? GroupId { get; set; }
         public Guid? ProfileId { get; set; }
         public string ProfileName { get; set; }
+        public string ProfileNameOt { get; set; }
+
         public string GroupName { get; set; }
        public string GroupNameOt { get; set; }
         public string CompanyName { get; set; }
@@ -50,5 +52,8 @@ namespace MobCentra.Application.Dto
         public virtual GeoFencDto GeoFenc { get; set; }
         public DateTime? GeoFencDate { get; set; }
         public DateTime? BatteryDate { get; set; }
+        public DateTime? DeviceDateTime { get; set; }
+        public bool? IsWrongTime { get; set; }
+
     }
 }

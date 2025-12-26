@@ -88,6 +88,8 @@ namespace MobCentra.Application.Mapper
                     .ForMember(dest => dest.CompanyName, src => src.MapFrom(a => a.Company == null ? string.Empty : a.Company.NameAr))
                     .ForMember(dest => dest.GroupName, src => src.MapFrom(a => a.Group == null ? string.Empty : a.Group.NameAr))
                     .ForMember(dest => dest.GroupNameOt, src => src.MapFrom(a => a.Group == null ? string.Empty : a.Group.NameOt))
+                    .ForMember(dest => dest.ProfileName, src => src.MapFrom(a => a.Profile == null ? string.Empty : a.Profile.NameAr))
+                    .ForMember(dest => dest.ProfileNameOt, src => src.MapFrom(a => a.Profile == null ? string.Empty : a.Profile.NameOt))
                     .ForMember(dest => dest.CurrentLocation, src => src.MapFrom(a => a.CurrentLocation == null ? string.Empty : $"{a.CurrentLocation.X},{a.CurrentLocation.Y}"));
 
             CreateMap<DeviceDto, Device>()

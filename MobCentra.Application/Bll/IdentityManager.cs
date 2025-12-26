@@ -17,7 +17,7 @@ namespace MobCentra.Application.Bll
             string token = _httpContextAccessor!.HttpContext!.Request.Headers["Authorization"]!.FirstOrDefault()?.Replace("Bearer ", string.Empty) ?? string.Empty;
 
 
-            if (token.IsNullOrEmpty()) return (TId)(object)Guid.NewGuid();
+            if (token.IsNullOrEmpty()) return (TId)(object)Guid.Empty;
 
 
             JwtSecurityTokenHandler handler = new();

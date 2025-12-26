@@ -46,6 +46,8 @@ namespace MobCentra.Domain.Entities
         public string SystemSpace { get; set; }
         public DateTime? UnpinedDate { get; set; }
         public Guid? ProfileId { get; set; }
+        public virtual Profile Profile { get; set; }
+
         public DateTime? LastSeenDate { get; set; }
         public int? TrackActivated { get; set; }
         [NotMapped]
@@ -53,6 +55,10 @@ namespace MobCentra.Domain.Entities
 
         public DateTime? GeoFencDate { get; set; }
         public DateTime? BatteryDate { get; set; }
+        public DateTime? DeviceDateTime { get; set; }
+        [NotMapped]
+        public bool? IsWrongTime { get; set; }
+
 
 
     }

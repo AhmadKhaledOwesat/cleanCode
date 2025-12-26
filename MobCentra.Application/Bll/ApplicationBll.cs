@@ -38,7 +38,7 @@ namespace MobCentra.Application.Bll
 
             // Upload application file if provided
             if (!entity.File.IsNullOrEmpty())
-                entity.File = await entity.File.UplodaFiles();
+                entity.File = await entity.File.UplodaFiles(name:Guid.NewGuid().ToString());
             await base.AddAsync(entity);
         }
 

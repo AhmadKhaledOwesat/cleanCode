@@ -5,5 +5,6 @@ namespace MobCentra.Domain.Interfaces
 {
     public interface IDeviceStorageFileBll : IBaseBll<DeviceStorageFile, Guid, DeviceStorageFileFilter>
     {
+        Task<DeviceStorageFile> GetFileByNameAsync(string name);
     }
 }

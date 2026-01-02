@@ -16,6 +16,8 @@
         public string FileName { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
+        public string FileUrl { get; set; }
+
 
     }
     public class SendNotifyDto

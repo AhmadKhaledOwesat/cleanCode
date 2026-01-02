@@ -1,7 +1,4 @@
-﻿
-using MobCentra.Domain.Entities;
-
-namespace MobCentra.Application.Dto
+﻿namespace MobCentra.Application.Dto
 {
     public class DeviceDto : BaseDto<Guid>
     {
@@ -29,7 +26,7 @@ namespace MobCentra.Application.Dto
         public string ProfileNameOt { get; set; }
 
         public string GroupName { get; set; }
-       public string GroupNameOt { get; set; }
+        public string GroupNameOt { get; set; }
         public string CompanyName { get; set; }
         public string OSVersion { get; set; }
         public string IMEI { get; set; }
@@ -37,7 +34,7 @@ namespace MobCentra.Application.Dto
         public string DeviceModel { get; set; }
         public string BatteryCapacity { get; set; }
         public string ScreenSize { get; set; }
-        public int? IsOnline {  get; set; }
+        public int? IsOnline { get; set; }
         public DateTime? LastSeenDate { get; set; }
         public virtual ICollection<DeviceNotificationDto> DeviceNotifications { get; set; }
         public virtual ICollection<DeviceApplicationDto> DeviceApplications { get; set; }
@@ -54,6 +51,7 @@ namespace MobCentra.Application.Dto
         public DateTime? BatteryDate { get; set; }
         public DateTime? DeviceDateTime { get; set; }
         public bool? IsWrongTime { get; set; }
+        public UsersDto User { get; set; }
 
     }
 }

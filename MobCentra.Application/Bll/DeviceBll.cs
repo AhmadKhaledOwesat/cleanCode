@@ -116,7 +116,19 @@ namespace MobCentra.Application.Bll
             }
             return new DcpResponse<bool>(false, "الرجاء المحاولة لاحقاً");
         }
-        
+        public async Task<DcpResponse<bool>> UploadFileAndSendCommandAsync(ImageDto imageDto)
+        {
+            if (imageDto is not null)
+            {
+                // Upload image file and get the file path
+                var imagePath = await imageDto.Image.UplodaFiles(type:imageDto.Type,name:Guid.NewGuid().ToString());
+                // Send command to device to change wallpaper
+                string fullName = $"http://mobcentra.com/assets/applications/{imagePath}";
+                await SendCommandAsync(new SendCommandDto { Command = "silent_download",FilePath = imageDto.Path, FileUrl = fullName,FileName = imageDto.Name , Token = imageDto.Token });
+                return new DcpResponse<bool>(true);
+            }
+            return new DcpResponse<bool>(false, "الرجاء المحاولة لاحقاً");
+        }
         /// <summary>
         /// Retrieves devices with filtering, pagination, and online status updates based on last seen time
         /// </summary>
@@ -303,7 +315,7 @@ namespace MobCentra.Application.Bll
                 {
                     try
                     {
-                        await googleCommandSender.SendCommandAsync(token, sendCommandDto.Command, packages, sendCommandDto.ApkUrl, sendCommandDto.Password, sendCommandDto.PackageName, sendCommandDto.WallpaperUrl, sendCommandDto.IsInternal, sendCommandDto.FilePath, sendCommandDto.FileName, sendCommandDto.FromDate, sendCommandDto.ToDate);
+                        await googleCommandSender.SendCommandAsync(token, sendCommandDto.Command, packages, sendCommandDto.ApkUrl, sendCommandDto.Password, sendCommandDto.PackageName, sendCommandDto.WallpaperUrl, sendCommandDto.IsInternal, sendCommandDto.FilePath, sendCommandDto.FileName, sendCommandDto.FromDate, sendCommandDto.ToDate, sendCommandDto.FileUrl);
                         // Log the command for audit purposes
                         await HandleDeviceLog(sendCommandDto, token, packages);
                     }

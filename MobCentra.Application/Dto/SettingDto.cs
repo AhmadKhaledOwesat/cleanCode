@@ -12,6 +12,7 @@
         public int SendToMobileApp { get; set; }
         public Guid? CompanyId { get; set; }
         public int IsSystem { get; set; }
+        public UsersDto User { get; set; }
 
     }
 }

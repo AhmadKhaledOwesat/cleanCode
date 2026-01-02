@@ -59,6 +59,10 @@ namespace MobCentra.Domain.Entities
         [NotMapped]
         public bool? IsWrongTime { get; set; }
 
+        [ForeignKey(nameof(CreatedBy))]
+        public virtual Users User { get; set; }
+
+
 
 
     }

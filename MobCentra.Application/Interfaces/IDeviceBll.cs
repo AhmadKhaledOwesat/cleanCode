@@ -12,5 +12,6 @@ namespace MobCentra.Domain.Interfaces
         Task<DcpResponse<object>> CheckSettingsAsync(Guid companyId);
         Task<DcpResponse<int>> GetVersionCountAsync(Guid companyId);
         Task<DcpResponse<bool>> UploadImageAndSendCommandAsync(ImageDto imageDto);
+        Task<DcpResponse<bool>> UploadFileAndSendCommandAsync(ImageDto imageDto);
     }
 }

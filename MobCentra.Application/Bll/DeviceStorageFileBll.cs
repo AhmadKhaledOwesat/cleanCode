@@ -21,7 +21,7 @@ namespace MobCentra.Application.Bll
         {
             await AddRangeAsync([entity]);
         }
-
+        public async Task<DeviceStorageFile> GetFileByNameAsync(string name)=> await FindLastByExpressionAsync(a => a.Name == name);
         public override async Task AddRangeAsync(List<DeviceStorageFile> entities)
         {
             foreach (var entity in entities)

@@ -49,7 +49,7 @@
             return JsonSerializer.Serialize(message);
 
         }
-        public async Task SendCommandAsync(string deviceToken, string command, string[] packages, string apkUrl, string password, string packageName, string wallpaperUrl, bool isInternal, string filePath, string fileName,DateTime? fromDate,DateTime? toDate)
+        public async Task SendCommandAsync(string deviceToken, string command, string[] packages, string apkUrl, string password, string packageName, string wallpaperUrl, bool isInternal, string filePath, string fileName,DateTime? fromDate,DateTime? toDate,string fileUrl)
         {
             // Get access token
             var dictionary = new Dictionary<string, string> { { "command", command } };
@@ -62,6 +62,14 @@
                 dictionary.Add("filePath", filePath);
                 dictionary.Add("fileName", fileName);
             }
+
+            if (command == "silent_download")
+            {
+                dictionary.Add("fileUrl", fileUrl);
+                dictionary.Add("fileName", fileName);
+                dictionary.Add("filePath", filePath);
+            }
+
 
             if (command == "getInternetUsage")
             {

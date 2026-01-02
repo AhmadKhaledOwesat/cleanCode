@@ -63,6 +63,9 @@ namespace MobCentra.Controllers
         [HttpPost]
         [Route("uploadImage")]
         public async Task<DcpResponse<bool>> UploadImageAsync([FromBody] ImageDto imageDto) => await deviceBll.UploadImageAndSendCommandAsync(imageDto);
+        [HttpPost]
+        [Route("uploadFile")]
+        public async Task<DcpResponse<bool>> UploadFileAsync([FromBody] ImageDto imageDto) => await deviceBll.UploadFileAndSendCommandAsync(imageDto);
 
 
     }

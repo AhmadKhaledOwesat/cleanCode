@@ -94,6 +94,7 @@ namespace MobCentra.Application.DI
             serviceDescriptors.AddScoped<IDeviceLogBll, DeviceLogBll>();
             serviceDescriptors.AddScoped<IDeviceApplicationBll, DeviceApplicationBll>();
             serviceDescriptors.AddScoped<IReportParameterBll, ReportParameterBll>();
+            serviceDescriptors.AddScoped<IDevicesGeoFenceLogBll, DevicesGeoFenceLogBll>();
             serviceDescriptors.AddScoped<IStatisticBll, StatisticBll>();
             serviceDescriptors.AddScoped<IFeatureBll, FeatureBll>();
             serviceDescriptors.AddScoped<IProfileBll, ProfileBll>();

@@ -11,6 +11,8 @@ namespace MobCentra.Domain.Entities
         public int Active { get; set; }
         public int Sort { get; set; }
         public int? ShowConfirmatrionAlert { get; set; }
+        public int? ShowInSetupForm { get; set; }
+
         public string AlertMessage { get; set; }
         public string AlertIcon { get; set; }
         public string AlertMessageOt { get; set; }

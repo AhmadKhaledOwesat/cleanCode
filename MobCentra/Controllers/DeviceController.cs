@@ -18,7 +18,16 @@ namespace MobCentra.Controllers
         {
             if (!await deviceBll.IsAuthorizedAsync(Guid.Parse(Permissions.Devices)))
                 throw new UnauthorizedAccessException();
-            return new DcpResponse<PageResult<DeviceDto>>(mapper.Map<PageResult<DeviceDto>>(await deviceBll.GetAllAsync(searchParameters)));
+            try
+            {
+                return new DcpResponse<PageResult<DeviceDto>>(mapper.Map<PageResult<DeviceDto>>(await deviceBll.GetAllAsync(searchParameters)));
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return null;
         }
         [HttpPost]
         [Route("sendCommand")]
@@ -52,11 +61,8 @@ namespace MobCentra.Controllers
         }
         [HttpGet]
         [Route("getVersionCount/{companyId}")]
-        public async Task<DcpResponse<int>> GetVersionCountAsync(Guid companyId)
+        public async Task<DcpResponse<dynamic>> GetVersionCountAsync(Guid companyId)
         {
-            if (!await deviceBll.IsAuthorizedAsync(Guid.Parse(Permissions.UpdateMDM)))
-                throw new UnauthorizedAccessException();
-
             return await deviceBll.GetVersionCountAsync(companyId);
         }
 

@@ -10,7 +10,7 @@ namespace MobCentra.Application.Bll
         {
             if (searchParameters is not null)
             {
-                    searchParameters.Expression = new Func<GoogleCommand, bool>(a => a.Active == 1);
+                    searchParameters.Expression = new Func<GoogleCommand, bool>(a => a.Active == 1 && (searchParameters.ShowInSetupForm == null || a.ShowInSetupForm == searchParameters.ShowInSetupForm));
             }
 
             return base.GetAllAsync(searchParameters);

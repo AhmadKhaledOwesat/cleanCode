@@ -9,5 +9,10 @@
         public int? StatusId { get; set; }
         public int? PinnedStatusId { get; set; }
         public DateTime?  FromDate { get; set; }
+        public string? Percentage { get; set; }
+        public string? VersionNo { get; set; }
+        public int? IsWrongTime { get; set; }
+
+
     }
 }

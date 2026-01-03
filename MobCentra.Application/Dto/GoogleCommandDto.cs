@@ -15,6 +15,8 @@
         public string AlertIcon { get; set; }
         public int? ShowConfirmatrionAlert { get; set; }
         public Guid? CommandGroupId { get; set; }
+        public int? ShowInSetupForm { get; set; }
+
 
     }
 }

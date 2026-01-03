@@ -43,6 +43,7 @@
         public virtual ICollection<DeviceFileDto> DeviceFiles { get; set; }
         public virtual ICollection<DeviceStorageFileDto> DeviceStorageFiles { get; set; }
         public virtual ICollection<TasksDto> Tasks { get; set; }
+        public virtual ICollection<DevicesGeoFenceLogDto> DevicesGeoFenceLogs { get; set; }
 
         public bool IsFromBackOffice { get; set; } = false;
         public int? TrackActivated { get; set; }

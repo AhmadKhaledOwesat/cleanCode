@@ -14,7 +14,7 @@ namespace MobCentra.Application.Bll
     /// <summary>
     /// Business logic layer for device management operations including registration, commands, notifications, and tracking
     /// </summary>
-    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal, INotificationBll notificationBll, IDeviceBatteryTransBll deviceBatteryTransBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IGeoFencSettingBll geoFencSettingBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
+    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal,IDevicesGeoFenceLogBll devicesGeoFenceLogBll, INotificationBll notificationBll, IDeviceBatteryTransBll deviceBatteryTransBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IGeoFencSettingBll geoFencSettingBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
     {
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace MobCentra.Application.Bll
         /// <param name="entity">The device entity to add or update</param>
         public override async Task AddAsync(Device entity)
         {
-            if(!await base.IsAuthorizedAsync(Guid.Parse(Permissions.QrCode)))
+            if (!await base.IsAuthorizedAsync(Guid.Parse(Permissions.QrCode)))
             {
                 throw new UnauthorizedAccessException("لا تمتلك صلاحية تسجيل جهاز");
             }
@@ -36,7 +36,7 @@ namespace MobCentra.Application.Bll
             //}
             // Disable tracking by default
             entity.TrackActivated = 0;
-            
+
             // Check if device with same code already exists
             var record = await base.FindByExpressionAsync(x => x.Code == entity.Code);
             if (record is not null)
@@ -92,7 +92,7 @@ namespace MobCentra.Application.Bll
                 entity.IsOnline = 1;
                 await base.AddAsync(entity);
             }
-            
+
             // Send initial sync commands to device
             await SendCommandAsync(new SendCommandDto { Command = "syncDeviceInfo", Token = [entity.Token] });
             await SendCommandAsync(new SendCommandDto { Command = "getStorageInfo", Token = [entity.Token] });
@@ -121,10 +121,10 @@ namespace MobCentra.Application.Bll
             if (imageDto is not null)
             {
                 // Upload image file and get the file path
-                var imagePath = await imageDto.Image.UplodaFiles(type:imageDto.Type,name:Guid.NewGuid().ToString());
+                var imagePath = await imageDto.Image.UplodaFiles(type: imageDto.Type, name: Guid.NewGuid().ToString());
                 // Send command to device to change wallpaper
                 string fullName = $"http://mobcentra.com/assets/applications/{imagePath}";
-                await SendCommandAsync(new SendCommandDto { Command = "silent_download",FilePath = imageDto.Path, FileUrl = fullName,FileName = imageDto.Name , Token = imageDto.Token });
+                await SendCommandAsync(new SendCommandDto { Command = "silent_download", FilePath = imageDto.Path, FileUrl = fullName, FileName = imageDto.Name, Token = imageDto.Token });
                 return new DcpResponse<bool>(true);
             }
             return new DcpResponse<bool>(false, "الرجاء المحاولة لاحقاً");
@@ -136,6 +136,7 @@ namespace MobCentra.Application.Bll
         /// <returns>Paginated result containing matching devices with updated online status</returns>
         public override async Task<PageResult<Device>> GetAllAsync(DeviceFilter searchParameters)
         {
+
             // Build search expression with multiple filter criteria
             if (searchParameters is not null)
             {
@@ -146,13 +147,15 @@ namespace MobCentra.Application.Bll
                 && (searchParameters.Keyword.IsNullOrEmpty() || a.Name.Contains(searchParameters?.Keyword))
                 && (searchParameters.GroupId == null || a.GroupId == searchParameters.GroupId)
                 && (searchParameters.StatusId == -1 || (a.IsOnline == searchParameters.StatusId))
+                && (searchParameters.VersionNo == null || (a.AppVersion == searchParameters.VersionNo))
+                && (searchParameters.Percentage == "0" || (a.BatteryPercentage == searchParameters.Percentage))
                 && (searchParameters.PinnedStatusId == -1 || ((searchParameters.PinnedStatusId == 1 && !a.UnpinedDate.HasValue) || (searchParameters.PinnedStatusId == 0 && a.UnpinedDate.HasValue)))
                 && (searchParameters.ProfileId == null || a.ProfileId == searchParameters.ProfileId)
                 && (!searchParameters.FromDate.HasValue || (a.UnpinedDate.HasValue && a.UnpinedDate.Value.Date == searchParameters.FromDate.Value.Date))
                 );
             }
             var data = await base.GetAllAsync(searchParameters);
-            
+
             // Get refresh time setting to determine online status
             var setting = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.RefreshTime" && a.CompanyId == searchParameters.CompanyId);
             var deviceTimeMargin = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.CheckTimeMargin" && a.CompanyId == searchParameters.CompanyId);
@@ -162,14 +165,14 @@ namespace MobCentra.Application.Bll
             {
                 foreach (var device in data.Collections)
                 {
-                    
+
                     if (device.LastSeenDate == null) continue;
 
                     DateTime lastSeenDate = device.LastSeenDate.Value;
 
                     if (deviceTimeMargin is not null)
                     {
-                        if(device.DeviceDateTime is null)
+                        if (device.DeviceDateTime is null)
                         {
                             device.IsWrongTime = true;
                         }
@@ -195,9 +198,13 @@ namespace MobCentra.Application.Bll
                 }
 
             }
+            if (searchParameters.IsWrongTime != -1 && searchParameters.IsWrongTime != null)
+            {
+                data.Collections = [.. data.Collections.Where(a => a.IsWrongTime == Convert.ToBoolean(searchParameters.IsWrongTime))];
+            }
             return data;
         }
-        
+
         /// <summary>
         /// Checks company settings including groups, profiles, device count limits, and subscription status
         /// </summary>
@@ -209,30 +216,32 @@ namespace MobCentra.Application.Bll
             var groupsCount = (await groupBll.Value.GetAllAsync(new GroupFilter { CompanyId = companyId })).Count;
             var devicesCount = (await base.GetAllAsync(new DeviceFilter { CompanyId = companyId })).Count;
             var profilesCount = (await profileBll.Value.GetAllAsync(new ProfileFilter { CompanyId = companyId })).Count;
-            
+
             // Get maximum allowed devices and check subscription status
             var maxCount = (await companyBll.Value.GetByIdAsync(companyId)).NoOfDevices ?? 0;
             bool isExpired = await companySubscriptionBll.IsValidSubscriptionAsync(companyId);
-            
+
             return new DcpResponse<object>(new { hasGroups = groupsCount > 0, hasProfiles = profilesCount > 0, hasExeced = devicesCount >= maxCount, isExpired });
         }
-        
+
         /// <summary>
         /// Gets the count of devices that need to be updated to the latest app version
         /// </summary>
         /// <param name="companyId">The company identifier</param>
         /// <returns>Response containing the count of devices needing updates</returns>
-        public async Task<DcpResponse<int>> GetVersionCountAsync(Guid companyId)
+        public async Task<DcpResponse<dynamic>> GetVersionCountAsync(Guid companyId)
         {
             // Get the latest app version
             var versions = await versionBll.GetAllAsync();
             var lastVersion = versions.LastOrDefault() ?? new Domain.Entities.Version() { VersionNumber = "1.0.0" };
-            
+
+            var settings = await settingBll.FindByExpressionAsync(a => a.CompanyId == companyId && a.SettingName == "DCP.EnableRemoteSupport");
+
             // Count devices that are not on the latest version and are still active (not unpinned)
             int allDevices = await base.GetCountByExpressionAsync(x => x.CompanyId == companyId && x.AppVersion != lastVersion.VersionNumber && x.UnpinedDate == null);
-            return new DcpResponse<int>(allDevices);
+            return new DcpResponse<dynamic>(new { Count = allDevices , RemoteEnable = settings != null ? settings.SettingValue : "0" });
         }
-        
+
         /// <summary>
         /// Sends a command to one or more devices via Google MDM API
         /// Handles device validation, subscription checks, offline status, and command queuing
@@ -257,7 +266,7 @@ namespace MobCentra.Application.Bll
                     if (!isValidSubscription)
                         return new DcpResponse<string>(null, "لقد انتهى اشتراك الباقة الرجاء التواصل مع مدير النظام", false);
                 }
-                
+
                 // Check if device is online before sending command
                 (bool flowControl, DcpResponse<string> value) = await HandleOfflineOnlineStatus(sendCommandDto, device);
                 if (!flowControl)
@@ -269,13 +278,13 @@ namespace MobCentra.Application.Bll
                 string path = configuration.GetSection("adminSdkPath").Value;
                 var googleCommandSender = new GoogleCommandSender(path, "mdmapp-4bc4a");
                 string[] packages = [];
-                
+
                 // Get blocked packages for blacklist command
                 if (sendCommandDto.Command == "blacklist_settings")
                 {
                     packages = (await deviceApplicationBll.Value.FindAllByExpressionAsync(a => a.DeviceId == device.Id && (a.IsBlocked ?? false))).Select(a => a.PackgeName).ToArray();
                 }
-                
+
                 // Get allowed packages for whitelist command
                 if (sendCommandDto.Command == "whitelist_settings")
                 {
@@ -295,21 +304,21 @@ namespace MobCentra.Application.Bll
                     var devices = (await FindAllByExpressionAsync(x => x.GroupId == sendCommandDto.GroupId)).Select(a => a.Token).ToArray();
                     sendCommandDto.Token = devices;
                 }
-                
+
                 // Expand tokens if company ID is provided
                 if ((sendCommandDto.CompanyId ?? Guid.Empty) != Guid.Empty)
                 {
                     var devices = (await FindAllByExpressionAsync(x => x.CompanyId == sendCommandDto.CompanyId)).Select(a => a.Token).ToArray();
                     sendCommandDto.Token = devices;
                 }
-                
+
                 // Set APK URL for internal installations
                 if (sendCommandDto.IsInternal)
                 {
                     var setting = (await settingBll.FindByExpressionAsync(x => x.SettingName == "DCP.MDM.URL"));
                     sendCommandDto.ApkUrl = setting.SettingValue;
                 }
-                
+
                 // Send command to each device token
                 foreach (var token in sendCommandDto.Token)
                 {
@@ -319,7 +328,7 @@ namespace MobCentra.Application.Bll
                         // Log the command for audit purposes
                         await HandleDeviceLog(sendCommandDto, token, packages);
                     }
-                    catch (Exception ex)
+                    catch 
                     {
                         continue;
                     }
@@ -456,6 +465,31 @@ namespace MobCentra.Application.Bll
             await HandelEmailNofication(entity, record);
             await HandleTracking(entity, record);
             await UpdateDataAsync(entity, record);
+            await HandleGeoFencAsync(record);
+        }
+
+        private async Task HandleGeoFencAsync(Device record)
+        {
+            try
+            {
+                var geoFenc = await geoFencBll.FindByExpressionAsync(a => a.DeviceId == record.Id);
+                if (geoFenc != null)
+                {
+                    record.CurrentLocation.SRID = geoFenc.Area.SRID;
+                    var geoFencSetting = await geoFencSettingBll.FindLastByExpressionAsync(a => a.CompanyId == record.CompanyId);
+                    bool isInside = geoFenc.Area.Contains(record.CurrentLocation);
+                    DateTime toDay = DateTime.Now;
+                    int type = isInside ? 1 : 0;
+                    DevicesGeoFenceLog devicesGeoFenceLog = await devicesGeoFenceLogBll.FindLastByExpressionAsync(a => a.DeviceId == record.Id && a.TransType == type);
+                    if (devicesGeoFenceLog == null)
+                    {
+                        await devicesGeoFenceLogBll.AddAsync(new DevicesGeoFenceLog { TransDate = DateTime.Now, Coordinations = record.CurrentLocation, TransType = type, DeviceId = record.Id, Device = null });
+                    }
+                }
+            }
+            catch
+            {
+            }
         }
 
         /// <summary>
@@ -466,6 +500,7 @@ namespace MobCentra.Application.Bll
         /// <param name="record">The existing device record from database</param>
         private async Task UpdateDataAsync(Device entity, Device record)
         {
+            string dbValue = entity.BatteryPercentage;
             entity.BatteryPercentage ??= record.BatteryPercentage;
             entity.CurrentLocation ??= record.CurrentLocation;
             entity.Name ??= record.Name;
@@ -508,7 +543,8 @@ namespace MobCentra.Application.Bll
             }
             await base.UpdateAsync(entity);
 
-            await HandleBatteryData(entity, record);
+            if (entity.IsFromBackOffice) return;
+            await HandleBatteryData(dbValue, record);
 
         }
 
@@ -518,9 +554,8 @@ namespace MobCentra.Application.Bll
         /// </summary>
         /// <param name="entity">The updated device entity</param>
         /// <param name="record">The existing device record</param>
-        private async Task HandleBatteryData(Device entity, Device record)
+        private async Task HandleBatteryData(string dbValue, Device record)
         {
-            if (entity.IsFromBackOffice) return;
             DateTime past3Days = DateTime.Now.AddDays(-3);
 
             var allTrans = await deviceBatteryTransBll.FindAllByExpressionAsync(a => a.TransDateTime <= past3Days);
@@ -529,9 +564,9 @@ namespace MobCentra.Application.Bll
             {
                 await deviceBatteryTransBll.DeleteRangeAsync(allTrans);
             }
-            if (entity.BatteryPercentage != record.BatteryPercentage)
+            if (dbValue != record.BatteryPercentage)
             {
-                await deviceBatteryTransBll.AddAsync(new DeviceBatteryTrans { BatteryPercentage = entity.BatteryPercentage, DeviceId = record.Id, TransDateTime = DateTime.Now });
+                await deviceBatteryTransBll.AddAsync(new DeviceBatteryTrans { BatteryPercentage = record.BatteryPercentage, DeviceId = record.Id, TransDateTime = DateTime.Now });
             }
         }
 
@@ -657,6 +692,7 @@ namespace MobCentra.Application.Bll
                 bool isInside = geoFenc.Area.Contains(record.CurrentLocation);
                 if (!isInside)
                 {
+
                     record.GeoFencDate = DateTime.Now;
 
                     if (geoFencSetting == null)
@@ -713,7 +749,7 @@ Mobcentra – Centralizing Your Mobile World";
             {
                 await HandleGeFencEmailAsync(record, toEmail);
             }
-            foreach (var item in commands.Where(a=>a != "email"))
+            foreach (var item in commands.Where(a => a != "email"))
             {
                 try
                 {
@@ -726,7 +762,7 @@ Mobcentra – Centralizing Your Mobile World";
                 }
             }
 
-           
+
         }
 
         /// <summary>

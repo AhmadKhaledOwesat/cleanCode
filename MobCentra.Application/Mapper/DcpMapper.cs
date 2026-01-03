@@ -19,6 +19,7 @@ namespace MobCentra.Application.Mapper
         }
         public DcpMapper()
         {
+            CreateMap<DevicesGeoFenceLog, DevicesGeoFenceLogDto>().ForMember(dest => dest.Coordinations, src => src.MapFrom(a => a.Coordinations == null ? string.Empty : $"{a.Coordinations.X},{a.Coordinations.Y}"));
             CreateMap<Users, UsersDto>().ReverseMap();
             CreateMap<City, CityDto>().ReverseMap();
             CreateMap<Tasks, TasksDto>()

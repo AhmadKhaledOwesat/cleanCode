@@ -10,7 +10,7 @@ namespace MobCentra.Domain.Interfaces
         Task<DcpResponse<string>> SendNotifyAsync(SendNotifyDto sendNotifyDto);
         Task<DcpResponse<string>> DeleteRecordAsync(DateTime? fromDate, DateTime? toDate);
         Task<DcpResponse<object>> CheckSettingsAsync(Guid companyId);
-        Task<DcpResponse<int>> GetVersionCountAsync(Guid companyId);
+        Task<DcpResponse<dynamic>> GetVersionCountAsync(Guid companyId);
         Task<DcpResponse<bool>> UploadImageAndSendCommandAsync(ImageDto imageDto);
         Task<DcpResponse<bool>> UploadFileAndSendCommandAsync(ImageDto imageDto);
     }

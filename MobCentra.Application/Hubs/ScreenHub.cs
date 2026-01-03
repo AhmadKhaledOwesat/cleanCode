@@ -78,7 +78,7 @@ namespace MobCentra.Application.Hubs
                     }
                 }
 
-                byte[]? bytes = null;
+                byte[] bytes = [];
 
                 // Handle different input types that SignalR might send
                 if (imageData == null)

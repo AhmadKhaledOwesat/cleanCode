@@ -6,6 +6,7 @@ namespace MobCentra.Infrastructure.EfContext
 { 
     public class StudioContext(DbContextOptions<StudioContext> dbContextOptions) : DbContext(dbContextOptions)
     {
+        public DbSet<DevicesGeoFenceLog> DevicesGeoFenceLogs { get; set; }
         public DbSet<Feature> Features { get; set; }
         public DbSet<GeoFencSetting> GeoFencSettings { get; set; }
         public DbSet<DeviceUsage> DeviceUsages { get; set; }
@@ -54,6 +55,8 @@ namespace MobCentra.Infrastructure.EfContext
             modelBuilder.Entity<DeviceQueu>().ToTable("DeviceQueus");
             modelBuilder.Entity<Device>().ToTable("Devices").Property(a => a.CurrentLocation).HasColumnType("geometry");
             modelBuilder.Entity<GeoFenc>().ToTable("GeoFencs").Property(a => a.Area).HasColumnType("geometry");
+            modelBuilder.Entity<DevicesGeoFenceLog>().ToTable("DevicesGeoFenceLog").Property(a => a.Coordinations).HasColumnType("geometry");
+
         }
     }
 }

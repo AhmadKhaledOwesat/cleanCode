@@ -14,7 +14,7 @@ namespace MobCentra.Application.Dal
     {
         public virtual async Task AddAsync(T entity)
         {
-            entity.CreatedDate = DateTime.Now;
+            entity.CreatedDate = DateTime.UtcNow;
             entity.CreatedBy = identityManager.CurrentUserId;
             await efRepository.InsertAsync(entity);
         }
@@ -43,7 +43,7 @@ namespace MobCentra.Application.Dal
 
         public virtual async Task UpdateAsync(T entity)
         {
-            entity.ModifiedDate = DateTime.Now;
+            entity.ModifiedDate = DateTime.UtcNow;
             entity.ModifiedBy = identityManager.CurrentUserId;
             await efRepository.UpdateAsync(entity);
         }
@@ -60,7 +60,7 @@ namespace MobCentra.Application.Dal
         {
             entities.ForEach(entity =>
             {
-                entity.ModifiedDate = DateTime.Now;
+                entity.ModifiedDate = DateTime.UtcNow;
                 entity.ModifiedBy = identityManager.CurrentUserId;
             });
             await efRepository.UpdateRangeAsync(entities);
@@ -69,7 +69,7 @@ namespace MobCentra.Application.Dal
         {
             entities.ForEach(entity =>
             {
-                entity.CreatedDate = DateTime.Now;
+                entity.CreatedDate = DateTime.UtcNow;
                 entity.CreatedBy = identityManager.CurrentUserId;
             });
             await efRepository.InsertRangeAsync(entities);

@@ -45,7 +45,18 @@ namespace MobCentra.Application.Bll
                 bool isValidSubscription = await companySubscriptionBll.IsValidSubscriptionAsync(record.CompanyId.Value);
                 if (!isValidSubscription)
                     throw new Exception("لقد انتهى اشتراك الباقة الرجاء التواصل مع مدير النظام");
+                if (record.DeviceDateTime.HasValue)
+                {
+                    var dt = record.DeviceDateTime.Value;
 
+                    record.DeviceDateTime = dt.Kind switch
+                    {
+                        DateTimeKind.Utc => dt,
+                        DateTimeKind.Local => dt.ToUniversalTime(),
+                        DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Local).ToUniversalTime(),
+                        _ => dt
+                    };
+                }
                 // Preserve existing device properties if new values are not provided
                 entity.BatteryPercentage ??= record.BatteryPercentage;
                 entity.CurrentLocation ??= record.CurrentLocation;
@@ -182,7 +193,7 @@ namespace MobCentra.Application.Bll
                         }
                     }
                     // Calculate seconds since device was last seen
-                    int secondsSinceLastSeen = (int)(DateTime.Now - lastSeenDate).TotalSeconds;
+                    int secondsSinceLastSeen = (int)(DateTime.UtcNow - lastSeenDate).TotalSeconds;
 
                     // Mark device as offline if it hasn't been seen within refresh time + 10 seconds buffer
                     if (secondsSinceLastSeen > Convert.ToInt16(setting.SettingValue) + 10)
@@ -294,7 +305,7 @@ namespace MobCentra.Application.Bll
                 // Handle device unbinding
                 if (sendCommandDto.Command == "unbind_device")
                 {
-                    device.UnpinedDate = DateTime.Now;
+                    device.UnpinedDate = DateTime.UtcNow;
                     await base.UpdateAsync(device);
                 }
 
@@ -360,7 +371,7 @@ namespace MobCentra.Application.Bll
 
                 DateTime lastSeenDate = device.LastSeenDate.Value;
 
-                int secondsSinceLastSeen = (int)(DateTime.Now - lastSeenDate).TotalSeconds;
+                int secondsSinceLastSeen = (int)(DateTime.UtcNow - lastSeenDate).TotalSeconds;
                 if (secondsSinceLastSeen > Convert.ToInt16(setting.SettingValue) + 10)
                 {
                     device.IsOnline = 0;
@@ -478,12 +489,12 @@ namespace MobCentra.Application.Bll
                     record.CurrentLocation.SRID = geoFenc.Area.SRID;
                     var geoFencSetting = await geoFencSettingBll.FindLastByExpressionAsync(a => a.CompanyId == record.CompanyId);
                     bool isInside = geoFenc.Area.Contains(record.CurrentLocation);
-                    DateTime toDay = DateTime.Now;
+                    DateTime toDay = DateTime.UtcNow;
                     int type = isInside ? 1 : 0;
                     DevicesGeoFenceLog devicesGeoFenceLog = await devicesGeoFenceLogBll.FindLastByExpressionAsync(a => a.DeviceId == record.Id && a.TransType == type);
                     if (devicesGeoFenceLog == null)
                     {
-                        await devicesGeoFenceLogBll.AddAsync(new DevicesGeoFenceLog { TransDate = DateTime.Now, Coordinations = record.CurrentLocation, TransType = type, DeviceId = record.Id, Device = null });
+                        await devicesGeoFenceLogBll.AddAsync(new DevicesGeoFenceLog { TransDate = DateTime.UtcNow, Coordinations = record.CurrentLocation, TransType = type, DeviceId = record.Id, Device = null });
                     }
                 }
             }
@@ -500,6 +511,18 @@ namespace MobCentra.Application.Bll
         /// <param name="record">The existing device record from database</param>
         private async Task UpdateDataAsync(Device entity, Device record)
         {
+            if (record.DeviceDateTime.HasValue)
+            {
+                var dt = record.DeviceDateTime.Value;
+
+                record.DeviceDateTime = dt.Kind switch
+                {
+                    DateTimeKind.Utc => dt,
+                    DateTimeKind.Local => dt.ToUniversalTime(),
+                    DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Local).ToUniversalTime(),
+                    _ => dt
+                };
+            }
             string dbValue = entity.BatteryPercentage;
             entity.BatteryPercentage ??= record.BatteryPercentage;
             entity.CurrentLocation ??= record.CurrentLocation;
@@ -535,7 +558,7 @@ namespace MobCentra.Application.Bll
             entity.TrackActivated ??= record.TrackActivated;
             if (!entity.IsFromBackOffice)
             {
-                entity.LastSeenDate = DateTime.Now;
+                entity.LastSeenDate = DateTime.UtcNow;
             }
             else
             {
@@ -556,7 +579,7 @@ namespace MobCentra.Application.Bll
         /// <param name="record">The existing device record</param>
         private async Task HandleBatteryData(string dbValue, Device record)
         {
-            DateTime past3Days = DateTime.Now.AddDays(-3);
+            DateTime past3Days = DateTime.UtcNow.AddDays(-3);
 
             var allTrans = await deviceBatteryTransBll.FindAllByExpressionAsync(a => a.TransDateTime <= past3Days);
 
@@ -566,7 +589,7 @@ namespace MobCentra.Application.Bll
             }
             if (dbValue != record.BatteryPercentage)
             {
-                await deviceBatteryTransBll.AddAsync(new DeviceBatteryTrans { BatteryPercentage = record.BatteryPercentage, DeviceId = record.Id, TransDateTime = DateTime.Now });
+                await deviceBatteryTransBll.AddAsync(new DeviceBatteryTrans { BatteryPercentage = record.BatteryPercentage, DeviceId = record.Id, TransDateTime = DateTime.UtcNow });
             }
         }
 
@@ -612,7 +635,7 @@ namespace MobCentra.Application.Bll
                 {
                     TimeSpan start = DateTime.ParseExact(setting.SettingValue, "hh:mm tt", CultureInfo.InvariantCulture).TimeOfDay;
                     TimeSpan end = DateTime.ParseExact(setting.SettingValueOt, "hh:mm tt", CultureInfo.InvariantCulture).TimeOfDay;
-                    TimeSpan now = DateTime.Now.TimeOfDay;
+                    TimeSpan now = DateTime.UtcNow.TimeOfDay;
                     if (!(now >= start && now <= end)) return false;
                 }
 
@@ -624,7 +647,7 @@ namespace MobCentra.Application.Bll
                 {
                     deviceTransaction.Coordinations = location;
                 }
-                deviceTransaction.TransDateTime = DateTime.Now;
+                deviceTransaction.TransDateTime = DateTime.UtcNow;
                 deviceTransaction.Distance = 0;
 
                 var lastTransaction = await deviceTransactionBll.FindLastByExpressionAsync(x => x.DeviceId == record.Id);
@@ -681,7 +704,7 @@ namespace MobCentra.Application.Bll
         /// <param name="toEmail">The email setting for notifications</param>
         private async Task HandleGeoFencNotifyAsync(Device record, Setting toEmail)
         {
-            if (record.GeoFencDate.HasValue && DateTime.Now.Date == record.GeoFencDate.Value.Date) return;
+            if (record.GeoFencDate.HasValue && DateTime.UtcNow.Date == record.GeoFencDate.Value.Date) return;
 
             var geoFenc = await geoFencBll.FindByExpressionAsync(a => a.DeviceId == record.Id);
             if (geoFenc != null)
@@ -693,7 +716,7 @@ namespace MobCentra.Application.Bll
                 if (!isInside)
                 {
 
-                    record.GeoFencDate = DateTime.Now;
+                    record.GeoFencDate = DateTime.UtcNow;
 
                     if (geoFencSetting == null)
                     {
@@ -775,12 +798,12 @@ Mobcentra – Centralizing Your Mobile World";
         private async Task HandleBatteryNotifyAsync(Device record, Setting setting, Setting toEmail)
         {
 
-            if (record.BatteryDate.HasValue && DateTime.Now.Date == record.BatteryDate.Value.Date) return;
+            if (record.BatteryDate.HasValue && DateTime.UtcNow.Date == record.BatteryDate.Value.Date) return;
 
 
             if (!record.BatteryPercentage.IsNullOrEmpty() && Convert.ToInt32(record.BatteryPercentage) <= Convert.ToInt16(setting.SettingValue))
             {
-                record.BatteryDate = DateTime.Now;
+                record.BatteryDate = DateTime.UtcNow;
                 string body = $@"
                                          This is an automated alert from the MobCentra
                                          <br/>

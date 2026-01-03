@@ -11,8 +11,8 @@ namespace MobCentra.Application.Bll
 
         public override Task<PageResult<DeviceTransaction>> GetAllAsync(DeviceTransactionFilter searchParameters)
         {
-            searchParameters.FromDate ??= DateTime.Now;
-            searchParameters.ToDate ??= DateTime.Now;
+            searchParameters.FromDate ??= DateTime.UtcNow;
+            searchParameters.ToDate ??= DateTime.UtcNow;
             searchParameters.Expression = new Func<DeviceTransaction, bool>(a => a.DeviceId == searchParameters.DeviceId 
             && ( a.TransDateTime.Date >= searchParameters.FromDate.Value.Date)
             && ( a.TransDateTime.Date <= searchParameters.ToDate.Value.Date));

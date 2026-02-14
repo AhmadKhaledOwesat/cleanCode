@@ -5,6 +5,8 @@ using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
 using MobCentra.Infrastructure.Extensions;
+using NetTopologySuite.Geometries;
+using NetTopologySuite.IO;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -48,14 +50,7 @@ namespace MobCentra.Application.Bll
                 if (record.DeviceDateTime.HasValue)
                 {
                     var dt = record.DeviceDateTime.Value;
-
-                    record.DeviceDateTime = dt.Kind switch
-                    {
-                        DateTimeKind.Utc => dt,
-                        DateTimeKind.Local => dt.ToUniversalTime(),
-                        DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Local).ToUniversalTime(),
-                        _ => dt
-                    };
+                    record.DeviceDateTime = dt.ToUniversalTime();
                 }
                 // Preserve existing device properties if new values are not provided
                 entity.BatteryPercentage ??= record.BatteryPercentage;
@@ -87,7 +82,7 @@ namespace MobCentra.Application.Bll
                 entity.SystemSpace ??= record.SystemSpace;
                 entity.AppVersion ??= record.AppVersion;
                 entity.BatteryDate ??= record.BatteryDate;
-                entity.DeviceDateTime ??= record.DeviceDateTime;
+                entity.DeviceDateTime ??= record.DeviceDateTime.HasValue ? record.DeviceDateTime.Value.ToUniversalTime(): record.DeviceDateTime;
                 entity.GeoFencDate ??= record.GeoFencDate;
                 entity.TrackActivated ??= record.TrackActivated;
                 await base.UpdateAsync(entity);
@@ -101,6 +96,12 @@ namespace MobCentra.Application.Bll
 
                 // Mark device as online and add new device
                 entity.IsOnline = 1;
+                if (entity.DeviceDateTime.HasValue)
+                {
+                    var dt = entity.DeviceDateTime.Value;
+                    entity.DeviceDateTime = dt.ToUniversalTime();
+                }
+
                 await base.AddAsync(entity);
             }
 
@@ -159,7 +160,7 @@ namespace MobCentra.Application.Bll
                 && (searchParameters.GroupId == null || a.GroupId == searchParameters.GroupId)
                 && (searchParameters.StatusId == -1 || (a.IsOnline == searchParameters.StatusId))
                 && (searchParameters.VersionNo == null || (a.AppVersion == searchParameters.VersionNo))
-                && (searchParameters.Percentage == "0" || (a.BatteryPercentage == searchParameters.Percentage))
+                && (searchParameters.Percentage == "0" || searchParameters.Percentage.IsNullOrEmpty() || (Convert.ToInt16(a.BatteryPercentage) <= Convert.ToInt16(searchParameters.Percentage)))
                 && (searchParameters.PinnedStatusId == -1 || ((searchParameters.PinnedStatusId == 1 && !a.UnpinedDate.HasValue) || (searchParameters.PinnedStatusId == 0 && a.UnpinedDate.HasValue)))
                 && (searchParameters.ProfileId == null || a.ProfileId == searchParameters.ProfileId)
                 && (!searchParameters.FromDate.HasValue || (a.UnpinedDate.HasValue && a.UnpinedDate.Value.Date == searchParameters.FromDate.Value.Date))
@@ -189,7 +190,7 @@ namespace MobCentra.Application.Bll
                         }
                         else
                         {
-                            device.IsWrongTime = lastSeenDate.Subtract(device.DeviceDateTime.Value).TotalSeconds > int.Parse(deviceTimeMargin.SettingValue);
+                            device.IsWrongTime = Math.Abs(lastSeenDate.Subtract(device.DeviceDateTime.Value).TotalSeconds) > int.Parse(deviceTimeMargin.SettingValue);
                         }
                     }
                     // Calculate seconds since device was last seen
@@ -306,6 +307,8 @@ namespace MobCentra.Application.Bll
                 if (sendCommandDto.Command == "unbind_device")
                 {
                     device.UnpinedDate = DateTime.UtcNow;
+                    device.Token = null;
+                    device.Code = null;
                     await base.UpdateAsync(device);
                 }
 
@@ -389,6 +392,28 @@ namespace MobCentra.Application.Bll
             {
                 return (flowControl: false, value: new DcpResponse<string>(null, ex.InnerException?.Message ?? ex.Message, false));
             }
+        }
+
+        public override async Task<Device> GetByIdAsync(Guid id)
+        {
+            var device = await base.GetByIdAsync(id);
+            if (device.LastSeenDate == null) return device;
+
+            DateTime lastSeenDate = device.LastSeenDate.Value;
+            var deviceTimeMargin = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.CheckTimeMargin" && a.CompanyId == device.CompanyId);
+
+            if (deviceTimeMargin is not null)
+            {
+                if (device.DeviceDateTime is null)
+                {
+                    device.IsWrongTime = true;
+                }
+                else
+                {
+                    device.IsWrongTime = Math.Abs(lastSeenDate.Subtract(device.DeviceDateTime.Value).TotalSeconds) > int.Parse(deviceTimeMargin.SettingValue);
+                }
+            }
+            return device;
         }
 
         /// <summary>
@@ -486,9 +511,12 @@ namespace MobCentra.Application.Bll
                 var geoFenc = await geoFencBll.FindByExpressionAsync(a => a.DeviceId == record.Id);
                 if (geoFenc != null)
                 {
-                    record.CurrentLocation.SRID = geoFenc.Area.SRID;
-                    var geoFencSetting = await geoFencSettingBll.FindLastByExpressionAsync(a => a.CompanyId == record.CompanyId);
-                    bool isInside = geoFenc.Area.Contains(record.CurrentLocation);
+                    var reader = new WKTReader();
+                    var swappedPoint = new Point(record.CurrentLocation.Y, record.CurrentLocation.X)
+                    {
+                        SRID = record.CurrentLocation.SRID
+                    };
+                    bool isInside = geoFenc.Area.Contains(swappedPoint);
                     DateTime toDay = DateTime.UtcNow;
                     int type = isInside ? 1 : 0;
                     DevicesGeoFenceLog devicesGeoFenceLog = await devicesGeoFenceLogBll.FindLastByExpressionAsync(a => a.DeviceId == record.Id && a.TransType == type);
@@ -511,17 +539,17 @@ namespace MobCentra.Application.Bll
         /// <param name="record">The existing device record from database</param>
         private async Task UpdateDataAsync(Device entity, Device record)
         {
-            if (record.DeviceDateTime.HasValue)
+            if (entity.DeviceDateTime.HasValue)
             {
-                var dt = record.DeviceDateTime.Value;
-
-                record.DeviceDateTime = dt.Kind switch
-                {
-                    DateTimeKind.Utc => dt,
-                    DateTimeKind.Local => dt.ToUniversalTime(),
-                    DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Local).ToUniversalTime(),
-                    _ => dt
-                };
+                var dt = entity.DeviceDateTime.Value;
+                entity.DeviceDateTime = dt.ToUniversalTime();
+                //record.DeviceDateTime = dt.Kind switch
+                //{
+                //    DateTimeKind.Utc => dt,
+                //    DateTimeKind.Local => dt.ToUniversalTime(),
+                //    DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Local).ToUniversalTime(),
+                //    _ => dt
+                //};
             }
             string dbValue = entity.BatteryPercentage;
             entity.BatteryPercentage ??= record.BatteryPercentage;
@@ -711,8 +739,12 @@ namespace MobCentra.Application.Bll
             {
                 record.CurrentLocation.SRID = geoFenc.Area.SRID;
                 var geoFencSetting = await geoFencSettingBll.FindLastByExpressionAsync(a => a.CompanyId == record.CompanyId);
-
-                bool isInside = geoFenc.Area.Contains(record.CurrentLocation);
+                var reader = new WKTReader();
+                var swappedPoint = new Point(record.CurrentLocation.Y, record.CurrentLocation.X)
+                {
+                    SRID = record.CurrentLocation.SRID
+                };
+                bool isInside = geoFenc.Area.Contains(swappedPoint);
                 if (!isInside)
                 {
 

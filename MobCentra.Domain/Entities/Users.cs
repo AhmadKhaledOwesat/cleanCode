@@ -21,5 +21,7 @@ namespace MobCentra.Domain.Entities
         public OperationType OperationType { get; set; }
         public Guid? CityId { get; set; }
 
+        public string Email { get; set; }
+
     }
 }

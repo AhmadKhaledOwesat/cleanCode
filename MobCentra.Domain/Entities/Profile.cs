@@ -12,5 +12,8 @@ namespace MobCentra.Domain.Entities
         public virtual Company Company { get; set; }
 
         public virtual ICollection<ProfileFeature> ProfileFeatures { get; set; }
+
+        [ForeignKey(nameof(CreatedBy))]
+        public virtual Users User { get; set; }
     }
 }

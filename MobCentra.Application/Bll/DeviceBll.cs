@@ -337,7 +337,7 @@ namespace MobCentra.Application.Bll
 
             // Count devices that are not on the latest version and are still active (not unpinned)
             int allDevices = await base.GetCountByExpressionAsync(x => x.CompanyId == companyId && x.AppVersion != lastVersion.VersionNumber && x.UnpinedDate == null);
-            return new DcpResponse<dynamic>(new { Count = allDevices , RemoteEnable = settings != null ? settings.SettingValue : "0" });
+            return new DcpResponse<dynamic>(new { Count = allDevices , RemoteEnable = settings != null ? settings.SettingValue : "0" , lastVersion = lastVersion.VersionNumber });
         }
 
         /// <summary>

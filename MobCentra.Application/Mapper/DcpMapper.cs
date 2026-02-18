@@ -21,7 +21,9 @@ namespace MobCentra.Application.Mapper
         {
             CreateMap<DevicesGeoFenceLog, DevicesGeoFenceLogDto>().ForMember(dest => dest.Coordinations, src => src.MapFrom(a => a.Coordinations == null ? string.Empty : $"{a.Coordinations.X},{a.Coordinations.Y}"));
             CreateMap<Users, UsersDto>().ReverseMap();
-            CreateMap<City, CityDto>().ReverseMap();
+            CreateMap<City, CityDto>()
+                .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.User == null ? "مدير النظام" : a.User.FullName))
+                .ReverseMap();
             CreateMap<Tasks, TasksDto>()
                 .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.CreatedUser == null ? "مدير النظام" : a.CreatedUser.FullName))
                 .ReverseMap();
@@ -47,7 +49,8 @@ namespace MobCentra.Application.Mapper
             CreateMap<PageResult<MobCentra.Domain.Entities.Profile>, PageResult<ProfileDto>>()
                 .ReverseMap();
             CreateMap<MobCentra.Domain.Entities.Profile, ProfileDto>()
-                                .ForMember(dest => dest.CompanyName, src => src.MapFrom(a => a.Company == null ? string.Empty : a.Company.NameAr))
+                 .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.User == null ? "مدير النظام" : a.User.FullName))
+                 .ForMember(dest => dest.CompanyName, src => src.MapFrom(a => a.Company == null ? string.Empty : a.Company.NameAr))
                 .ReverseMap();
             CreateMap<PageResult<Statistic>, PageResult<StatisticDto>>().ReverseMap();
             CreateMap<Statistic, StatisticDto>().ReverseMap();
@@ -68,7 +71,9 @@ namespace MobCentra.Application.Mapper
                 .ForMember(dest => dest.DeviceName, src => src.MapFrom(a => a.Device == null ? string.Empty : a.Device.Name))
                 .ReverseMap();
             CreateMap<PageResult<Domain.Entities.Application>, PageResult<ApplicationDto>>().ReverseMap();
-            CreateMap<Domain.Entities.Application, ApplicationDto>().ReverseMap();
+            CreateMap<Domain.Entities.Application, ApplicationDto>()
+                                 .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.User == null ? "مدير النظام" : a.User.FullName))
+                                 .ReverseMap();
             CreateMap<PageResult<UserCommand>, PageResult<UserCommandDto>>().ReverseMap();
             CreateMap<UserCommand, UserCommandDto>()
                      .ForMember(dest => dest.GoogleCommandName, src => src.MapFrom(a => a.GoogleCommand == null ? string.Empty : a.GoogleCommand.Name))
@@ -101,6 +106,8 @@ namespace MobCentra.Application.Mapper
             CreateMap<GoogleCommand, GoogleCommandDto>().ReverseMap();
             CreateMap<PageResult<GoogleCommand>, PageResult<GoogleCommandDto>>().ReverseMap();
             CreateMap<Group, GroupDto>()
+                                 .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.User == null ? "مدير النظام" : a.User.FullName))
+
             .ForMember(dest => dest.CompanyName, src => src.MapFrom(a => a.Company == null ? string.Empty : a.Company.NameOt))
             .ReverseMap();
 

@@ -21,5 +21,7 @@ namespace MobCentra.Domain.Entities
         public dynamic Result { get; set; }
         [NotMapped]
         public dynamic ResultOt { get; set; }
+
+        public string ChartType { get; set; }
     }
 }

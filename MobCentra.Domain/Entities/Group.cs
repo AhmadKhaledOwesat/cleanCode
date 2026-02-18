@@ -10,5 +10,8 @@ namespace MobCentra.Domain.Entities
         public Guid? CompanyId { get; set; }
         [ForeignKey(nameof(CompanyId))]
         public virtual Company Company { get; set; }
+
+        [ForeignKey(nameof(CreatedBy))]
+        public virtual Users User { get; set; }
     }
 }

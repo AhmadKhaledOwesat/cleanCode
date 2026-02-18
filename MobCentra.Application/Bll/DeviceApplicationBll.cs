@@ -51,7 +51,7 @@ namespace MobCentra.Application.Bll
         public override async Task AddRangeAsync(List<DeviceApplication> entities)
         {
             var apps = await FindAllByExpressionAsync(ex => ex.DeviceId == entities.First().DeviceId);
-            if (apps.Any()) await DeleteRangeAsync(apps);
+            if (apps.Count != 0) await DeleteRangeAsync(apps);
             await base.AddRangeAsync(entities);
         }
 

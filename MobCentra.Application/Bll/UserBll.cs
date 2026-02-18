@@ -194,8 +194,7 @@ namespace MobCentra.Application.Bll
 ";
 
             // Get notification email from settings and send password reset email
-            var toEmail = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.Notification.Email" && a.CompanyId == user.CompanyId);
-            await emailSender.SendAsync("Password Reset", emailBody, toEmail.SettingValue);
+            await emailSender.SendAsync("Password Reset", emailBody, user.Email);
             return new DcpResponse<string>("");
         }
 

@@ -7,5 +7,7 @@
         public int Active { get; set; }
         public string File { get; set; }
         public Guid? CompanyId { get; set; }
+        public string CreatedByName { get; set; }
+
     }
 }

@@ -6,6 +6,9 @@
         public string NameOt { get; set; }
         public int Active { get; set; }
         public Guid? CompanyId { get; set; }
-        public string CompanyName { get; set; } 
+        public string CompanyName { get; set; }
+        public string CreatedByName { get; set; }
+
+
     }
 }

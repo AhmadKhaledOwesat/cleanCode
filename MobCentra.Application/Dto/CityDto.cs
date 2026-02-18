@@ -6,5 +6,6 @@
         public string NameOt { get; set; }
         public string Location { get; set; }
         public Guid? CompanyId { get; set; }
+        public string CreatedByName { get; set; }
     }
 }

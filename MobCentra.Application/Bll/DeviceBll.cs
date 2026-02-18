@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using MobCentra.Application.Dto;
 using MobCentra.Application.Interfaces;
 using MobCentra.Domain.Entities;
@@ -118,28 +118,114 @@ namespace MobCentra.Application.Bll
         /// <returns>Response indicating success or failure</returns>
         public async Task<DcpResponse<bool>> UploadImageAndSendCommandAsync(ImageDto imageDto)
         {
-            if (imageDto is not null)
+            if (imageDto is null)
+                return new DcpResponse<bool>(false, "الرجاء المحاولة لاحقاً", false);
+            if (string.IsNullOrEmpty(imageDto.Image))
+                return new DcpResponse<bool>(false, "Image content (base64) is required.", false);
+            var (isValid, errorMessage) = ValidateImageSignature(imageDto.Image);
+            if (!isValid)
+                return new DcpResponse<bool>(false, errorMessage, false);
+            // Upload image file and get the file path
+            var imagePath = await imageDto.Image.UplodaFiles(".png", "images", Guid.NewGuid().ToString());
+            await SendCommandAsync(new SendCommandDto { Command = "changeWallPaper", WallpaperUrl = imagePath, Token = imageDto.Token });
+            return new DcpResponse<bool>(true);
+        }
+
+        /// <summary>
+        /// Validates that the base64 content is a real image file by checking binary signatures (JPEG, PNG, GIF, BMP, WebP).
+        /// </summary>
+        private static (bool isValid, string errorMessage) ValidateImageSignature(string base64)
+        {
+            string data = base64.Trim();
+            if (data.Length == 0) return (false, "Image content is empty.");
+            int commaIndex = data.IndexOf(',');
+            if (commaIndex >= 0 && data.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                data = data[(commaIndex + 1)..].Trim();
+            byte[] bytes;
+            try
             {
-                // Upload image file and get the file path
-                var imagePath = await imageDto.Image.UplodaFiles(".png", "images", Guid.NewGuid().ToString());
-                // Send command to device to change wallpaper
-                await SendCommandAsync(new SendCommandDto { Command = "changeWallPaper", WallpaperUrl = imagePath, Token = imageDto.Token });
-                return new DcpResponse<bool>(true);
+                bytes = Convert.FromBase64String(data);
             }
-            return new DcpResponse<bool>(false, "الرجاء المحاولة لاحقاً");
+            catch (FormatException)
+            {
+                return (false, "Invalid base64 image content.");
+            }
+            if (bytes.Length < 4)
+                return (false, "File is not a valid image. Content is too short.");
+            // JPEG: FF D8 FF
+            if (bytes.Length >= 3 && bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF)
+                return (true, null!);
+            // PNG: 89 50 4E 47 0D 0A 1A 0A
+            if (bytes.Length >= 8 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47
+                && bytes[4] == 0x0D && bytes[5] == 0x0A && bytes[6] == 0x1A && bytes[7] == 0x0A)
+                return (true, null!);
+            // GIF87a or GIF89a: 47 49 46 38 37/39 61
+            if (bytes.Length >= 6 && bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x38
+                && (bytes[4] == 0x37 || bytes[4] == 0x39) && bytes[5] == 0x61)
+                return (true, null!);
+            // BMP: 42 4D
+            if (bytes.Length >= 2 && bytes[0] == 0x42 && bytes[1] == 0x4D)
+                return (true, null!);
+            // WebP: RIFF....WEBP (52 49 46 46 ... 57 45 42 50 at offset 8)
+            if (bytes.Length >= 12 && bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46
+                && bytes[8] == 0x57 && bytes[9] == 0x45 && bytes[10] == 0x42 && bytes[11] == 0x50)
+                return (true, null!);
+            return (false, "File is not a valid image. Only JPEG, PNG, GIF, BMP, or WebP formats are allowed.");
         }
         public async Task<DcpResponse<bool>> UploadFileAndSendCommandAsync(ImageDto imageDto)
         {
-            if (imageDto is not null)
+            const string allowedExtension = ".apk";
+            if (imageDto is null)
+                return new DcpResponse<bool>(false, "الرجاء المحاولة لاحقاً", false);
+            var fileName = imageDto.Name?.Trim();
+            if (string.IsNullOrEmpty(fileName) || !fileName.EndsWith(allowedExtension, StringComparison.OrdinalIgnoreCase))
+                return new DcpResponse<bool>(false, "Only APK files are allowed. The file name must end with .apk", false);
+            if (string.IsNullOrEmpty(imageDto.Image))
+                return new DcpResponse<bool>(false, "File content (base64) is required.", false);
+            var (isValid, errorMessage) = ValidateApkSignature(imageDto.Image);
+            if (!isValid)
+                return new DcpResponse<bool>(false, errorMessage, false);
+            // Upload file and get the file path
+            var imagePath = await imageDto.Image.UplodaFiles(type: imageDto.Type, name: Guid.NewGuid().ToString());
+            string fullName = $"http://mobcentra.com/assets/applications/{imagePath}";
+            await SendCommandAsync(new SendCommandDto { Command = "silent_download", FilePath = imageDto.Path, FileUrl = fullName, FileName = imageDto.Name, Token = imageDto.Token });
+            return new DcpResponse<bool>(true);
+        }
+
+        /// <summary>
+        /// Validates that the base64 content is a real APK (ZIP) file by checking the binary signature.
+        /// APK files are ZIP archives; ZIP magic bytes are 0x50 0x4B (PK) followed by a valid ZIP header.
+        /// </summary>
+        private static (bool isValid, string errorMessage) ValidateApkSignature(string base64)
+        {
+            const byte ZipFirst = 0x50;  // 'P'
+            const byte ZipSecond = 0x4B; // 'K'
+            // Standard ZIP local file header, end of central dir, or spanned archive
+            static bool IsValidZipHeader(byte b2, byte b3) =>
+                (b2 == 0x03 && b3 == 0x04) || (b2 == 0x05 && b3 == 0x06) || (b2 == 0x07 && b3 == 0x08);
+
+            string data = base64.Trim();
+            if (data.Length == 0) return (false, "File content is empty.");
+            // Strip optional data URL prefix (e.g. data:application/vnd.android.package-archive;base64,)
+            int commaIndex = data.IndexOf(',');
+            if (commaIndex >= 0 && data.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                data = data[(commaIndex + 1)..].Trim();
+            byte[] bytes;
+            try
             {
-                // Upload image file and get the file path
-                var imagePath = await imageDto.Image.UplodaFiles(type: imageDto.Type, name: Guid.NewGuid().ToString());
-                // Send command to device to change wallpaper
-                string fullName = $"http://mobcentra.com/assets/applications/{imagePath}";
-                await SendCommandAsync(new SendCommandDto { Command = "silent_download", FilePath = imageDto.Path, FileUrl = fullName, FileName = imageDto.Name, Token = imageDto.Token });
-                return new DcpResponse<bool>(true);
+                bytes = Convert.FromBase64String(data);
             }
-            return new DcpResponse<bool>(false, "الرجاء المحاولة لاحقاً");
+            catch (FormatException)
+            {
+                return (false, "Invalid base64 file content.");
+            }
+            if (bytes.Length < 4)
+                return (false, "File is not a valid APK. Content is too short.");
+            if (bytes[0] != ZipFirst || bytes[1] != ZipSecond)
+                return (false, "File is not a valid APK. Only APK (Android package) format is allowed.");
+            if (!IsValidZipHeader(bytes[2], bytes[3]))
+                return (false, "File is not a valid APK. Invalid file signature.");
+            return (true, null!);
         }
         /// <summary>
         /// Retrieves devices with filtering, pagination, and online status updates based on last seen time

@@ -19,6 +19,8 @@
         public int? NoOfApplications { get; set; }
         public int? NoOfTrackedDevices { get; set; }
         public string Token { get; set; }
+        public string RefreshToken { get; set; }
+
         public virtual ICollection<AppUserDto> AppUsers { get; set; }
         public virtual ICollection<SettingDto> Settings { get; set; }
     }

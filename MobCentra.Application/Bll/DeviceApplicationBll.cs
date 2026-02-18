@@ -45,7 +45,6 @@ namespace MobCentra.Application.Bll
             }
             else
             {
-                entity.IsBlocked = false;
                 await base.AddAsync(entity);
             }
         }

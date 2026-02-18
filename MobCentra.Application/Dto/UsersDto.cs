@@ -20,6 +20,7 @@ namespace MobCentra.Application.Dto
         public string CompanyCoordination { get; set; }
         public string EndDate { get; set; }
         public OperationType OperationType { get; set; }
+        public string RefreshToken { get; set; }
         public Guid? CityId { get; set; }   
     }
 }

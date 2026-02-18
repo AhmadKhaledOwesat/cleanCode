@@ -39,7 +39,10 @@ namespace MobCentra.Application.Bll
             
             // Map company to DTO and return
             CompanyDto usersDto = dcpMapper.Map<CompanyDto>(company);
-            usersDto.Token = authenticationManager.GenerateToken(userName, users.Id).Token;   
+            Tokens tokens = authenticationManager.GenerateToken(userName, users.Id);
+            usersDto.Token = tokens.Token;
+            usersDto.RefreshToken = tokens.RefreshToken;
+
             return new DcpResponse<CompanyDto>(usersDto);
         }
         

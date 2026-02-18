@@ -1,4 +1,4 @@
-﻿using MobCentra.Application.Interfaces;
+using MobCentra.Application.Interfaces;
 using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
@@ -8,7 +8,7 @@ using System.Linq.Expressions;
 
 namespace MobCentra.Application.Dal
 {
-    public class BaseDal<T, TId, TFilter>(IEfRepository<T, TId> efRepository, IIdentityManager<TId> identityManager) : IBaseDal<T, TId, TFilter> where T : BaseEntity<TId>
+    public class BaseDal<T, TId, TFilter>(IEfRepository<T, TId> efRepository, IIdentityManager<TId> identityManager, IAuthorizationChecker authorizationChecker) : IBaseDal<T, TId, TFilter> where T : BaseEntity<TId>
         where TId : struct
         where TFilter : SearchParameters<T>
     {
@@ -80,9 +80,10 @@ namespace MobCentra.Application.Dal
         public async Task<bool> IsAuthorizedAsync(Guid permssionId)
         {
             if (EqualityComparer<TId>.Default.Equals(identityManager.CurrentUserId, default))
-                return true;
-            var queryResult = await efRepository.ExecuteAsync($"select count('l') from RolePrivilege rp\r\n  join Roles r on r.Id = rp.RoleId\r\n  join UserRoles ur on ur.RoleId = r.Id\r\n  where ur.UserId = '{identityManager.CurrentUserId}' and rp.PrivilegeId = '{permssionId}'");
-            return queryResult[0] > 0;
+                return false;
+            if (typeof(TId) != typeof(Guid))
+                return false;
+            return await authorizationChecker.HasPermissionAsync((Guid)(object)identityManager.CurrentUserId, permssionId);
         }
     }
 }

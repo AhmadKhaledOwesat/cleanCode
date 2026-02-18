@@ -1,4 +1,4 @@
-﻿using MobCentra.Application.Dto;
+using MobCentra.Application.Dto;
 using MobCentra.Application.Interfaces;
 using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
@@ -36,10 +36,8 @@ namespace MobCentra.Application.Bll
         /// <param name="password">The password for authentication</param>
         /// <param name="companyCode">The company code to validate against</param>
         /// <returns>Response containing user DTO with token and permissions, or error message if authentication fails</returns>
-        public async Task<DcpResponse<UsersDto>> LoginAsync(string userName, string password, string companyCode,bool isByPass)
+        public async Task<DcpResponse<UsersDto>> LoginAsync(string userName, string password, string companyCode)
             {
-            if (isByPass)
-                return await InternalLoginAsync(userName);
             // Validate company exists and is active
             Company company = await companyBll.FindByExpressionAsync(x => x.CompanyCode == companyCode);
             if (company == null || company.Active == 0) return new DcpResponse<UsersDto>(null, "الرجاء التاكد من رمز الشركة", false);
@@ -81,33 +79,12 @@ namespace MobCentra.Application.Bll
             usersDto.CompanyCoordination = company.CompanyCoordination;
             
             // Generate authentication token
-            usersDto.Token = authenticationManager.GenerateToken(usersDto.FullName, usersDto.Id).Token;
+            Tokens tokens = authenticationManager.GenerateToken(userName, user.Id);
+            usersDto.Token = tokens.Token;
+            usersDto.RefreshToken = tokens.RefreshToken;
             return new DcpResponse<UsersDto>(usersDto);
         }
-        private async Task<DcpResponse<UsersDto>> InternalLoginAsync(string userName)
-        {
-            Users user = await baseDal.FindByExpressionAsync(x =>  x.UserName == userName);
 
-            // Validate company exists and is active
-            Company company = await companyBll.FindByExpressionAsync(x => x.Id == user.CompanyId);
-            if (company == null || company.Active == 0) return new DcpResponse<UsersDto>(null, "الرجاء التاكد من رمز الشركة", false);
-
-            // Authenticate user with hashed password
-            if (user == null) return new DcpResponse<UsersDto>(null, "الرجاء التاكد من كلمة المرور ورمز المستخدم", false);
-            List<CompanySubscription> companySubscriptions = await companySubscriptionBll.FindAllByExpressionAsync(x => x.CompanyId == company.Id);
-            // Map user entity to DTO
-            UsersDto usersDto = dcpMapper.Map<UsersDto>(user);
-            // Extract user permissions from active roles
-            usersDto.Permssions = user.UserRoles.Where(a => a.Role != null && a.Role.Active == 1).SelectMany(a => a.Role?.RolePrivileges).Select(x => x.PrivilegeId).ToArray() ?? [];
-            // Set company information and subscription end date
-            usersDto.EndDate = companySubscriptions.LastOrDefault()?.ToDate?.ToString("yyyy-MM-dd") ?? "";
-            usersDto.CompanyName = company.NameAr;
-            usersDto.CompanyNameOt = company.NameOt;
-            usersDto.CompanyCoordination = company.CompanyCoordination;
-            // Generate authentication token
-            usersDto.Token = authenticationManager.GenerateToken(usersDto.FullName, usersDto.Id).Token;
-            return new DcpResponse<UsersDto>(usersDto);
-        }
         /// <summary>
         /// Initiates password reset process by sending reset email to user
         /// </summary>
@@ -134,22 +111,19 @@ namespace MobCentra.Application.Bll
         }
 
         /// <summary>
-        /// Updates the password for a specific user
+        /// Updates the password for a specific user. Caller must be the same user or have EditUsers permission.
         /// </summary>
-        /// <param name="userId">The unique identifier of the user</param>
-        /// <param name="newPassword">The new password to set</param>
-        /// <returns>Response indicating success or error message</returns>
-        public async Task<DcpResponse<string>> UpdatePasswordAsync(Guid userId, string newPassword)
+        public async Task<DcpResponse<string>> UpdatePasswordAsync(Guid currentUserId, Guid userId, string newPassword)
         {
-            // Validate user exists and new password is provided
+            if (currentUserId != userId && !await base.IsAuthorizedAsync(Guid.Parse(Permissions.EditUsers)))
+                return new DcpResponse<string>(null, "Unauthorized", false);
             if (await GetByIdAsync(userId) is Users user && !newPassword.IsNullOrEmpty())
             {
-                // Hash and update password
                 user.Password = newPassword.HashedPassword();
                 await base.UpdateAsync(user);
                 return new DcpResponse<string>("success");
             }
-            return new DcpResponse<string>("User not found", "User not found", false);
+            return new DcpResponse<string>(null, "User not found", false);
         }
 
         /// <summary>
@@ -250,7 +224,7 @@ namespace MobCentra.Application.Bll
         public override async Task UpdateAsync(Users entity)
         {
             entity.Company = null;
-            if (await GetCountByExpressionAsync(a => a.UserName == entity.UserName && a.Id != entity.Id) > 0)
+            if (await GetCountByExpressionAsync(a => a.UserName == entity.UserName && a.Id != entity.Id && entity.CompanyId  ==a.CompanyId) > 0)
                 throw new Exception("رمز المستخدم موجود مسبقاً");
 
             // Update password if new password is provided

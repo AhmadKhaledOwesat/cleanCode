@@ -1,4 +1,4 @@
-﻿using MobCentra.Application.Bll;
+using MobCentra.Application.Bll;
 using MobCentra.Application.Dal;
 using MobCentra.Application.Interfaces;
 using MobCentra.Application.Mapper;
@@ -58,6 +58,7 @@ namespace MobCentra.Application.DI
                 return new Lazy<ICompanyBll>(() => provider.GetRequiredService<ICompanyBll>());
             });
             serviceDescriptors.AddScoped(typeof(IIdentityManager<>), typeof(IdentityManager<>));
+            serviceDescriptors.AddScoped<IAuthorizationChecker, AuthorizationChecker>();
             serviceDescriptors.AddScoped<IAuthenticationManager, AuthenticationManager>();
             serviceDescriptors.AddScoped<IDeviceBatteryTransBll, DeviceBatteryTransBll>();
             serviceDescriptors.AddScoped<IDeviceQueuBll, DeviceQueuBll>();

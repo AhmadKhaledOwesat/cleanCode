@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.IdentityModel.Tokens;
 using MobCentra.Application.Bll;
 using MobCentra.Application.DI;
 using MobCentra.Application.Hubs;
@@ -8,6 +12,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Scalar.AspNetCore;
 using System.Net;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,39 +26,52 @@ builder.Services.AddOptions<EmailOptions>()
      .Bind(builder.Configuration.GetSection("Email"));
 builder.Services.AddCors(op =>
 {
-    op.AddPolicy("AllowAllOrigins", builder =>
-    builder.AllowAnyOrigin()
-    .AllowAnyMethod()
-    .AllowAnyHeader());
+    op.AddPolicy("AllowAllOrigins", policy =>
+        policy.WithOrigins("https://mobcentra.com", "http://mobcentra.com", "http://localhost:4200", "https://localhost:4200")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
 });
 builder.Services.Configure<FormOptions>(o =>
 {
-    o.ValueLengthLimit = int.MaxValue;
-    o.MultipartBodyLengthLimit = int.MaxValue;
-    o.MemoryBufferThreshold = int.MaxValue;
+    o.ValueLengthLimit = 50 * 1024 * 1024; // 30 MB
+    o.MultipartBodyLengthLimit = 50 * 1024 * 1024;
+    o.MemoryBufferThreshold = 1024 * 1024;
 });
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is required"))),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.FromMinutes(5)
+    };
+});
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.SuppressModelStateInvalidFilter = false;
+    });
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = (int)HttpStatusCode.TooManyRequests;
+    options.AddFixedWindowLimiter("api", config =>
+    {
+        config.PermitLimit = 20;
+        config.Window = TimeSpan.FromMinutes(15);
+        config.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        config.QueueLimit = 0;
+    });
+});
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = null;
+    options.Limits.MaxRequestBodySize = 50 * 1024 * 1024; // 30 MB
 });
-//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-//{
-//    options.TokenValidationParameters = new TokenValidationParameters
-//    {
-//        ValidateIssuer = false,
-//        ValidateAudience = false,
-//        ValidateLifetime = false,
-//        ValidateIssuerSigningKey = false,
-//        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-//        ValidAudience = builder.Configuration["Jwt:Issuer"],
-//        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-//    };
-//});
-//builder.Services.AddHostedService<MobCentra.Application.HostedService.BackgroundService>();
 //#if !DEBUG
 //builder.WebHost.ConfigureKestrel(options =>
 //{
@@ -72,27 +90,46 @@ app.UseExceptionHandler(appError =>
 {
     appError.Run(async context =>
     {
-        context.Response.StatusCode = (int)HttpStatusCode.OK;
-        context.Response.ContentType = "application/json";
         var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
-        if (contextFeature != null)
-            await context.Response.WriteAsync(JsonConvert.SerializeObject(new DcpResponse<string>(contextFeature.Error.InnerException?.Message ?? contextFeature.Error.Message, contextFeature.Error.InnerException?.Message ?? contextFeature.Error.Message, false), new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                Formatting = Formatting.Indented
-            }));
+        var error = contextFeature?.Error;
+        var statusCode = error switch
+        {
+            UnauthorizedAccessException => HttpStatusCode.Unauthorized,
+            KeyNotFoundException or FileNotFoundException => HttpStatusCode.NotFound,
+            ArgumentException or InvalidOperationException => HttpStatusCode.BadRequest,
+            _ => HttpStatusCode.InternalServerError
+        };
+        context.Response.StatusCode = (int)statusCode;
+        context.Response.ContentType = "application/json";
+        var message = statusCode == HttpStatusCode.InternalServerError ? "An error occurred." : (error?.Message ?? "An error occurred.");
+        await context.Response.WriteAsync(JsonConvert.SerializeObject(new DcpResponse<string>(default!, message, false), new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            Formatting = Formatting.Indented
+        }));
     });
 });
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    await next();
+});
+app.UseRateLimiter();
+if (!app.Environment.IsDevelopment())
+    app.UseHsts();
 app.UseRouting();
 app.MapHub<NotificationHub>("/notificationHub");
 app.MapHub<ScreenHub>("/screenHub");
 app.UseCors("AllowAllOrigins");
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+app.MapControllers().RequireRateLimiting("api");
 app.MapScalarApiReference();
 app.MapOpenApi();
 app.Run();

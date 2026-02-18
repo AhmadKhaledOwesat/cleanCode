@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MobCentra.Application.Dto;
 using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
@@ -6,7 +7,7 @@ using MobCentra.Domain.Interfaces;
 
 namespace MobCentra.Controllers
 {
-    // [Authorize]
+    [Authorize]
     public class BaseController<T, TDto, TId, TFilter>(IBaseBll<T, TId, TFilter> _baseBll, IDcpMapper _mapper) : Controller
         where T : BaseEntity<TId>
         where TDto : BaseDto<TId>
@@ -44,9 +45,9 @@ namespace MobCentra.Controllers
             await baseBll.UpdateAsync(entity);
             return new DcpResponse<TId>(entity.Id);
         }
-        [HttpGet]
-        [Route("delete/{id}")]
-        public virtual async Task<DcpResponse<bool>> DeletAsync([FromRoute] TId id) => new DcpResponse<bool>(await baseBll.DeleteAsync(id));
+        [HttpDelete]
+        [Route("{id}")]
+        public virtual async Task<DcpResponse<bool>> DeleteAsync([FromRoute] TId id) => new DcpResponse<bool>(await baseBll.DeleteAsync(id));
         [HttpGet]
         [Route("{id}")]
         public virtual async Task<DcpResponse<TDto>> GetByIdAsync([FromRoute] TId id) => new DcpResponse<TDto>(mapper.Map<TDto>(await baseBll.GetByIdAsync(id)));

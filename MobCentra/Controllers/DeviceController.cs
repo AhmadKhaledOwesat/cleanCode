@@ -75,6 +75,9 @@ namespace MobCentra.Controllers
         {
             return await deviceBll.UploadFileAndSendCommandAsync(imageDto);
         }
+        [HttpPost]
+        [Route("geoFenc")]
+        public async Task<DcpResponse<bool>> GeoFencCityAsync([FromBody] List<GeoFencCityDto> sendNotifyDto) => await deviceBll.HandleGeoFencCityAsync(sendNotifyDto);
 
 
     }

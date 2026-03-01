@@ -1,7 +1,11 @@
-﻿using MobCentra.Domain.Entities;
+﻿using MobCentra.Application.Dto;
+using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
 using MobCentra.Infrastructure.Extensions;
+using NetTopologySuite;
+using NetTopologySuite.Geometries;
+using Newtonsoft.Json;
 
 namespace MobCentra.Application.Bll
 {
@@ -37,6 +41,32 @@ namespace MobCentra.Application.Bll
             // Check if company has reached the maximum number of areas limit
             await constraintBll.GetLimitAsync(entity.CompanyId.Value, Domain.Enum.LimitType.NoOfArea);
             await base.AddAsync(entity);
+        }
+
+        public override async Task UpdateAsync(City entity)
+        {
+            if(entity.RestrictedArea is not null)
+            {
+                entity.Area = null;
+                var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+                var coordinates = new List<Coordinate>();
+                var polygons = JsonConvert.DeserializeObject<List<List<CoordinateDto>>>(entity.RestrictedArea);
+                foreach (var polygon in polygons)
+                    foreach (var point in polygon)
+                        coordinates.Add(new Coordinate(point.lng, point.lat));
+
+                if (!coordinates.First().Equals2D(coordinates.Last()))
+                {
+                    coordinates.Add(coordinates[0]);
+                }
+                entity.Area = geometryFactory.CreatePolygon([.. coordinates]);
+            }
+            else
+            {
+                var dbEntity = await GetByIdAsync(entity.Id);
+                entity.Area = dbEntity.Area;
+            }
+            await base.UpdateAsync(entity);
         }
     }
 }

@@ -51,10 +51,10 @@ namespace MobCentra.Infrastructure.EfContext
         {
             modelBuilder.Entity<Company>().ToTable("Companies");
             modelBuilder.Entity<DeviceNotification>().ToTable("DeviceNotifications");
-            modelBuilder.Entity<City>().ToTable("City");
+            modelBuilder.Entity<City>().ToTable("City").Property(a => a.Area).HasColumnType("geometry");
             modelBuilder.Entity<DeviceQueu>().ToTable("DeviceQueus");
             modelBuilder.Entity<Device>().ToTable("Devices").Property(a => a.CurrentLocation).HasColumnType("geometry");
-            modelBuilder.Entity<GeoFenc>().ToTable("GeoFencs").Property(a => a.Area).HasColumnType("geometry");
+            modelBuilder.Entity<GeoFenc>().ToTable("GeoFencs");
             modelBuilder.Entity<DevicesGeoFenceLog>().ToTable("DevicesGeoFenceLog").Property(a => a.Coordinations).HasColumnType("geometry");
 
         }

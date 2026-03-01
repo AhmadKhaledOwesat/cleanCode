@@ -567,17 +567,18 @@ namespace MobCentra.Application.Bll
         {
             try
             {
-                var geoFenc = await geoFencBll.FindByExpressionAsync(a => a.DeviceId == record.Id);
-                if (geoFenc != null)
+                var geoFences = await geoFencBll.FindAllByExpressionAsync(a => a.DeviceId == record.Id);
+                if (geoFences != null && geoFences.Count > 0)
                 {
                     var reader = new WKTReader();
                     var swappedPoint = new Point(record.CurrentLocation.Y, record.CurrentLocation.X)
                     {
                         SRID = record.CurrentLocation.SRID
                     };
-                    bool isInside = geoFenc.Area.Contains(swappedPoint);
+                    bool isInsideAnyFence = geoFences.Any(f => f.City.Area != null && f.City.Area.Contains(swappedPoint));
+
+                    int type = isInsideAnyFence ? 1 : 0;
                     DateTime toDay = DateTime.UtcNow;
-                    int type = isInside ? 1 : 0;
                     DevicesGeoFenceLog devicesGeoFenceLog = await devicesGeoFenceLogBll.FindLastByExpressionAsync(a => a.DeviceId == record.Id && a.TransType == type);
                     if (devicesGeoFenceLog == null)
                     {
@@ -727,9 +728,11 @@ namespace MobCentra.Application.Bll
                 }
 
                 string location = $"{record.CurrentLocation.X},{record.CurrentLocation.Y}";
-                var deviceTransaction = new DeviceTransaction();
-                deviceTransaction.DeviceId = record.Id;
-                deviceTransaction.Device = null;
+                var deviceTransaction = new DeviceTransaction
+                {
+                    DeviceId = record.Id,
+                    Device = null
+                };
                 if (record.CurrentLocation != null)
                 {
                     deviceTransaction.Coordinations = location;
@@ -793,18 +796,18 @@ namespace MobCentra.Application.Bll
         {
             if (record.GeoFencDate.HasValue && DateTime.UtcNow.Date == record.GeoFencDate.Value.Date) return;
 
-            var geoFenc = await geoFencBll.FindByExpressionAsync(a => a.DeviceId == record.Id);
-            if (geoFenc != null)
+            var geoFencs = await geoFencBll.FindAllByExpressionAsync(a => a.DeviceId == record.Id);
+            if (geoFencs != null && geoFencs.Count > 0)
             {
-                record.CurrentLocation.SRID = geoFenc.Area.SRID;
+                record.CurrentLocation.SRID = geoFencs[0].City.Area.SRID;
                 var reader = new WKTReader();
                 var swappedPoint = new Point(record.CurrentLocation.Y, record.CurrentLocation.X)
                 {
                     SRID = record.CurrentLocation.SRID
                 };
-                bool isInside = geoFenc.Area.Contains(swappedPoint);
+                bool isInsideAnyFence = geoFencs.Any(f => f.City.Area != null && f.City.Area.Contains(swappedPoint));
                 record.GeoFencDate = DateTime.UtcNow;
-                GeoFencType geoFencType = isInside ? GeoFencType.Inside : GeoFencType.Outside;
+                GeoFencType geoFencType = isInsideAnyFence ? GeoFencType.Inside : GeoFencType.Outside;
                 GeoFencSetting geoFencSetting = await geoFencSettingBll.FindLastByExpressionAsync(a => a.CompanyId == record.CompanyId && a.ActionType == geoFencType);
                 if (geoFencSetting is not null)
                     await HandleGeFencCommandAsync(record, geoFencSetting, toEmail);
@@ -838,6 +841,28 @@ Best regards,
 <br/>
 Mobcentra – Centralizing Your Mobile World";
             await emailSender.SendAsync("Geofence notification", body, toEmail.SettingValue);
+        }
+
+        public async Task<DcpResponse<bool>> HandleGeoFencCityAsync(List<GeoFencCityDto> geoFencCityDtos)
+        {
+            if(geoFencCityDtos.Count == 0) return new DcpResponse<bool>(false);
+
+            var oldRecords = await geoFencBll.FindAllByExpressionAsync(a => a.DeviceId == geoFencCityDtos[0].DeviceId);
+
+            if(oldRecords.Count  > 0)
+            await geoFencBll.DeleteRangeAsync(oldRecords);
+
+            List<GeoFenc> geoFencs = new();
+
+            geoFencCityDtos.ForEach(a =>
+            {
+                geoFencs.Add(new GeoFenc { CompanyId = a.ComapnyId, DeviceId = a.DeviceId, CityId = a.CityId });
+            });
+
+            if (geoFencs.Count > 0)
+                await geoFencBll.AddRangeAsync(geoFencs);
+
+            return new DcpResponse<bool>(true);
         }
 
         /// <summary>

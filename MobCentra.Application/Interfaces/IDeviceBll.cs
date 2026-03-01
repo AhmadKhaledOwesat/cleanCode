@@ -13,5 +13,7 @@ namespace MobCentra.Domain.Interfaces
         Task<DcpResponse<dynamic>> GetVersionCountAsync(Guid companyId);
         Task<DcpResponse<bool>> UploadImageAndSendCommandAsync(ImageDto imageDto);
         Task<DcpResponse<bool>> UploadFileAndSendCommandAsync(ImageDto imageDto);
+
+        Task<DcpResponse<bool>> HandleGeoFencCityAsync(List<GeoFencCityDto> geoFencCityDtos);
     }
 }

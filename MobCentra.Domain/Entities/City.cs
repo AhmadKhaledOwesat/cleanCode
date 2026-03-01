@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using NetTopologySuite.Geometries;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MobCentra.Domain.Entities
 {
@@ -11,5 +12,8 @@ namespace MobCentra.Domain.Entities
 
         [ForeignKey(nameof(CreatedBy))]
         public virtual Users User { get; set; }
+        public Polygon Area { get; set; }
+        [NotMapped]
+        public string RestrictedArea { get; set; }
     }
 }

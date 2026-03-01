@@ -25,7 +25,7 @@ namespace MobCentra.Infrastructure.EfContext
         public DbSet<CompanySubscription> CompanySubscriptions { get; set; }
         public DbSet<BlackListApp> BlackListApps { get; set; }
         public DbSet<Device> Devices { get; set; }
-        public DbSet<GoogleCommand> GoogleCommands { get; set; }
+        public DbSet<MDMCommand> MDMCommands { get; set; }
         public DbSet<UserGroup> UserGroups { get; set; }
         public DbSet<City> City { get; set; }
         public DbSet<Tasks> Tasks { get; set; }

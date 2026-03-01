@@ -23,7 +23,6 @@ namespace MobCentra.Application.Bll
             {
                     searchParameters.Expression = new Func<Report, bool>(a =>
                     (searchParameters.Keyword.IsNullOrEmpty() || a.ReportName.Contains(searchParameters?.Keyword) || a.ReportNameEn.Contains(searchParameters?.Keyword))
-                    && a.CompanyId == searchParameters.CompanyId
                     );
             }
 

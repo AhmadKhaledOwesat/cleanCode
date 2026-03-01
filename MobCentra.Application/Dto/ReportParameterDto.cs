@@ -6,6 +6,7 @@
         public string ReportName { get; set; }
         public string ParameterName { get; set; }
         public string ParameterTitle { get; set; }
+        public string ParameterTitleEn {  get; set; }
         public string ParameterType { get; set; }
         public string ParameterQuery { get; set; }
         public int ParameterOrder { get; set; }

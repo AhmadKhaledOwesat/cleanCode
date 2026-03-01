@@ -25,7 +25,8 @@ namespace MobCentra.Application.Bll
                     
                     (searchParameters.Keyword.IsNullOrEmpty() || a.NameAr.Contains(searchParameters?.Keyword) || a.NameOt.Contains(searchParameters?.Keyword)) 
                     && a.CompanyId == searchParameters.CompanyId
-                    && (searchParameters.Active == null || a.Active == searchParameters.Active));
+                    && (searchParameters.Active == null || a.Active == searchParameters.Active)
+                    && (searchParameters.UserId == null || a.UserGroups.Any(a=>a.UserId == searchParameters.UserId)));
             }
 
             return base.GetAllAsync(searchParameters);

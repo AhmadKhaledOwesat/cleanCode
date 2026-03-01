@@ -13,5 +13,6 @@ namespace MobCentra.Domain.Entities
 
         [ForeignKey(nameof(CreatedBy))]
         public virtual Users User { get; set; }
+        public virtual ICollection<UserGroup> UserGroups { get; set; } = [];
     }
 }

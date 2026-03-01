@@ -101,8 +101,8 @@ app.UseExceptionHandler(appError =>
         };
         context.Response.StatusCode = (int)statusCode;
         context.Response.ContentType = "application/json";
-        var message = statusCode == HttpStatusCode.InternalServerError ? "An error occurred." : (error?.Message ?? "An error occurred.");
-        await context.Response.WriteAsync(JsonConvert.SerializeObject(new DcpResponse<string>(default!, message, false), new JsonSerializerSettings
+        var message =  (error?.InnerException?.Message ?? error?.Message ?? "An error occurred.");
+        await context.Response.WriteAsync(JsonConvert.SerializeObject(new DcpResponse<string>(message, message, false), new JsonSerializerSettings
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
             Formatting = Formatting.Indented

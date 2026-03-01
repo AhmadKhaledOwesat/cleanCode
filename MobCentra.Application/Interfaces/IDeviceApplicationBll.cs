@@ -7,5 +7,6 @@ namespace MobCentra.Domain.Interfaces
     public interface IDeviceApplicationBll : IBaseBll<DeviceApplication, Guid, DeviceApplicationFilter>
     {
         Task<bool> UpdateStatus(DeviceBlockedApplicationDto[] entity);
+        Task<bool> DeleteAsync(string packageName, Guid deviceId);
     }
 }

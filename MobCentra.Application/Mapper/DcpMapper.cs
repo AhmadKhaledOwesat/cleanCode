@@ -76,8 +76,8 @@ namespace MobCentra.Application.Mapper
                                  .ReverseMap();
             CreateMap<PageResult<UserCommand>, PageResult<UserCommandDto>>().ReverseMap();
             CreateMap<UserCommand, UserCommandDto>()
-                     .ForMember(dest => dest.GoogleCommandName, src => src.MapFrom(a => a.GoogleCommand == null ? string.Empty : a.GoogleCommand.Name))
-                    .ForMember(dest => dest.GoogleCommandNameEn, src => src.MapFrom(a => a.GoogleCommand == null ? string.Empty : a.GoogleCommand.NameEn))
+                     .ForMember(dest => dest.MDMCommandName, src => src.MapFrom(a => a.GoogleCommand == null ? string.Empty : a.GoogleCommand.Name))
+                    .ForMember(dest => dest.MDMCommandNameEn, src => src.MapFrom(a => a.GoogleCommand == null ? string.Empty : a.GoogleCommand.NameEn))
                 .ReverseMap();
 
             CreateMap<PageResult<UserGroup>, PageResult<UserGroupDto>>().ReverseMap();
@@ -103,8 +103,8 @@ namespace MobCentra.Application.Mapper
 
 
             CreateMap<PageResult<Device>, PageResult<DeviceDto>>().ReverseMap();
-            CreateMap<GoogleCommand, GoogleCommandDto>().ReverseMap();
-            CreateMap<PageResult<GoogleCommand>, PageResult<GoogleCommandDto>>().ReverseMap();
+            CreateMap<MDMCommand, MDMCommandDto>().ReverseMap();
+            CreateMap<PageResult<MDMCommand>, PageResult<MDMCommandDto>>().ReverseMap();
             CreateMap<Group, GroupDto>()
                                  .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.User == null ? "مدير النظام" : a.User.FullName))
 

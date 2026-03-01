@@ -73,12 +73,6 @@ namespace MobCentra.Controllers
         [Route("uploadFile")]
         public async Task<DcpResponse<bool>> UploadFileAsync([FromBody] ImageDto imageDto)
         {
-            const string allowedExtension = ".apk";
-            if (imageDto == null)
-                return new DcpResponse<bool>(false, "Invalid request.", false);
-            var fileName = imageDto.Name?.Trim();
-            if (string.IsNullOrEmpty(fileName) || !fileName.EndsWith(allowedExtension, StringComparison.OrdinalIgnoreCase))
-                return new DcpResponse<bool>(false, "Only APK files are allowed. The file name must end with .apk", false);
             return await deviceBll.UploadFileAndSendCommandAsync(imageDto);
         }
 

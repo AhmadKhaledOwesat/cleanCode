@@ -1,6 +1,6 @@
 ﻿namespace MobCentra.Application.Dto
 {
-    public class GoogleCommandDto : BaseDto<Guid>
+    public class MDMCommandDto : BaseDto<Guid>
     {
         public string Name { get; set; }
         public string NameEn { get; set; }
@@ -16,6 +16,7 @@
         public int? ShowConfirmatrionAlert { get; set; }
         public Guid? CommandGroupId { get; set; }
         public int? ShowInSetupForm { get; set; }
+        public string SettingName { get; set; }
 
 
     }

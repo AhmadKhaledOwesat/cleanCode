@@ -7,9 +7,9 @@
     using System.Text;
     using System.Text.Json;
 
-    public class GoogleCommandSender(string firebaseCredentialsPath, string projectId)
+    public class MDMCommandSender(string firebaseCredentialsPath, string projectId)
     {
-        private readonly HttpClient _httpClient = new HttpClient();
+        private readonly HttpClient _httpClient = new();
         private readonly GoogleCredential _googleCredential = GoogleCredential.FromFile(firebaseCredentialsPath)
                 .CreateScoped("https://www.googleapis.com/auth/firebase.messaging");
 
@@ -62,6 +62,12 @@
                 dictionary.Add("filePath", filePath);
                 dictionary.Add("fileName", fileName);
             }
+
+            if (command == "setDateTime")
+            {
+                dictionary.Add("timeMillis", DateTime.Now.ToString());
+            }
+
 
             if (command == "silent_download")
             {

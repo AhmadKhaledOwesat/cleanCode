@@ -2,7 +2,7 @@
 
 namespace MobCentra.Domain.Entities
 {
-    public class GoogleCommand : BaseEntity<Guid>
+    public class MDMCommand : BaseEntity<Guid>
     {
         public string Name { get; set; }
         public string NameEn { get; set; }
@@ -19,5 +19,6 @@ namespace MobCentra.Domain.Entities
         public Guid? CommandGroupId { get; set; }
         [ForeignKey(nameof(CommandGroupId))]
         public virtual CommandGroup CommandGroup { get; set; }
+        public string SettingName { get; set; }
     }
 }

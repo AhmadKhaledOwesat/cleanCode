@@ -3,6 +3,7 @@ using MobCentra.Application.Dto;
 using MobCentra.Application.Interfaces;
 using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Enum;
 using MobCentra.Domain.Interfaces;
 using MobCentra.Infrastructure.Extensions;
 using NetTopologySuite.Geometries;
@@ -16,7 +17,7 @@ namespace MobCentra.Application.Bll
     /// <summary>
     /// Business logic layer for device management operations including registration, commands, notifications, and tracking
     /// </summary>
-    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal,IDevicesGeoFenceLogBll devicesGeoFenceLogBll, INotificationBll notificationBll, IDeviceBatteryTransBll deviceBatteryTransBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IGeoFencSettingBll geoFencSettingBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
+    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal, IMDMCommandBll mdmCommandBll, IDevicesGeoFenceLogBll devicesGeoFenceLogBll, INotificationBll notificationBll, IDeviceBatteryTransBll deviceBatteryTransBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IGeoFencSettingBll geoFencSettingBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
     {
 
         /// <summary>
@@ -82,7 +83,7 @@ namespace MobCentra.Application.Bll
                 entity.SystemSpace ??= record.SystemSpace;
                 entity.AppVersion ??= record.AppVersion;
                 entity.BatteryDate ??= record.BatteryDate;
-                entity.DeviceDateTime ??= record.DeviceDateTime.HasValue ? record.DeviceDateTime.Value.ToUniversalTime(): record.DeviceDateTime;
+                entity.DeviceDateTime ??= record.DeviceDateTime.HasValue ? record.DeviceDateTime.Value.ToUniversalTime() : record.DeviceDateTime;
                 entity.GeoFencDate ??= record.GeoFencDate;
                 entity.TrackActivated ??= record.TrackActivated;
                 await base.UpdateAsync(entity);
@@ -174,17 +175,16 @@ namespace MobCentra.Application.Bll
         }
         public async Task<DcpResponse<bool>> UploadFileAndSendCommandAsync(ImageDto imageDto)
         {
-            const string allowedExtension = ".apk";
             if (imageDto is null)
                 return new DcpResponse<bool>(false, "الرجاء المحاولة لاحقاً", false);
             var fileName = imageDto.Name?.Trim();
-            if (string.IsNullOrEmpty(fileName) || !fileName.EndsWith(allowedExtension, StringComparison.OrdinalIgnoreCase))
-                return new DcpResponse<bool>(false, "Only APK files are allowed. The file name must end with .apk", false);
-            if (string.IsNullOrEmpty(imageDto.Image))
-                return new DcpResponse<bool>(false, "File content (base64) is required.", false);
-            var (isValid, errorMessage) = ValidateApkSignature(imageDto.Image);
-            if (!isValid)
-                return new DcpResponse<bool>(false, errorMessage, false);
+            // if (string.IsNullOrEmpty(fileName) || !fileName.EndsWith(allowedExtension, StringComparison.OrdinalIgnoreCase))
+            //     return new DcpResponse<bool>(false, "Only APK files are allowed. The file name must end with .apk", false);
+            // if (string.IsNullOrEmpty(imageDto.Image))
+            //     return new DcpResponse<bool>(false, "File content (base64) is required.", false);
+            // var (isValid, errorMessage) = ValidateApkSignature(imageDto.Image);
+            // if (!isValid)
+            //     return new DcpResponse<bool>(false, errorMessage, false);
             // Upload file and get the file path
             var imagePath = await imageDto.Image.UplodaFiles(type: imageDto.Type, name: Guid.NewGuid().ToString());
             string fullName = $"http://mobcentra.com/assets/applications/{imagePath}";
@@ -196,37 +196,7 @@ namespace MobCentra.Application.Bll
         /// Validates that the base64 content is a real APK (ZIP) file by checking the binary signature.
         /// APK files are ZIP archives; ZIP magic bytes are 0x50 0x4B (PK) followed by a valid ZIP header.
         /// </summary>
-        private static (bool isValid, string errorMessage) ValidateApkSignature(string base64)
-        {
-            const byte ZipFirst = 0x50;  // 'P'
-            const byte ZipSecond = 0x4B; // 'K'
-            // Standard ZIP local file header, end of central dir, or spanned archive
-            static bool IsValidZipHeader(byte b2, byte b3) =>
-                (b2 == 0x03 && b3 == 0x04) || (b2 == 0x05 && b3 == 0x06) || (b2 == 0x07 && b3 == 0x08);
 
-            string data = base64.Trim();
-            if (data.Length == 0) return (false, "File content is empty.");
-            // Strip optional data URL prefix (e.g. data:application/vnd.android.package-archive;base64,)
-            int commaIndex = data.IndexOf(',');
-            if (commaIndex >= 0 && data.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
-                data = data[(commaIndex + 1)..].Trim();
-            byte[] bytes;
-            try
-            {
-                bytes = Convert.FromBase64String(data);
-            }
-            catch (FormatException)
-            {
-                return (false, "Invalid base64 file content.");
-            }
-            if (bytes.Length < 4)
-                return (false, "File is not a valid APK. Content is too short.");
-            if (bytes[0] != ZipFirst || bytes[1] != ZipSecond)
-                return (false, "File is not a valid APK. Only APK (Android package) format is allowed.");
-            if (!IsValidZipHeader(bytes[2], bytes[3]))
-                return (false, "File is not a valid APK. Invalid file signature.");
-            return (true, null!);
-        }
         /// <summary>
         /// Retrieves devices with filtering, pagination, and online status updates based on last seen time
         /// </summary>
@@ -312,14 +282,14 @@ namespace MobCentra.Application.Bll
         {
             // Get counts for groups, devices, and profiles
             var groupsCount = (await groupBll.Value.GetAllAsync(new GroupFilter { CompanyId = companyId })).Count;
-            var devicesCount = (await base.GetAllAsync(new DeviceFilter { CompanyId = companyId })).Count;
+            var devicesCount = (await GetAllAsync(new DeviceFilter { CompanyId = companyId })).Count;
             var profilesCount = (await profileBll.Value.GetAllAsync(new ProfileFilter { CompanyId = companyId })).Count;
 
             // Get maximum allowed devices and check subscription status
             var maxCount = (await companyBll.Value.GetByIdAsync(companyId)).NoOfDevices ?? 0;
             bool isExpired = await companySubscriptionBll.IsValidSubscriptionAsync(companyId);
 
-            return new DcpResponse<object>(new { hasGroups = groupsCount > 0, hasProfiles = profilesCount > 0, hasExeced = devicesCount >= maxCount, isExpired });
+            return new DcpResponse<object>(new { hasGroups = groupsCount > 0, hasProfiles = profilesCount > 0, hasExeced = devicesCount >= maxCount, isExpired = !isExpired });
         }
 
         /// <summary>
@@ -337,7 +307,7 @@ namespace MobCentra.Application.Bll
 
             // Count devices that are not on the latest version and are still active (not unpinned)
             int allDevices = await base.GetCountByExpressionAsync(x => x.CompanyId == companyId && x.AppVersion != lastVersion.VersionNumber && x.UnpinedDate == null);
-            return new DcpResponse<dynamic>(new { Count = allDevices , RemoteEnable = settings != null ? settings.SettingValue : "0" , lastVersion = lastVersion.VersionNumber });
+            return new DcpResponse<dynamic>(new { Count = allDevices, RemoteEnable = settings != null ? settings.SettingValue : "0", lastVersion = lastVersion.VersionNumber });
         }
 
         /// <summary>
@@ -352,18 +322,21 @@ namespace MobCentra.Application.Bll
             {
                 Device device = null;
                 // Validate device if token is provided
-                if (sendCommandDto.Token.Length > 0)
-                {
+
+                if (sendCommandDto.GroupId != null)
+                    device = await FindByExpressionAsync(x => x.GroupId == sendCommandDto.GroupId);
+                else if (sendCommandDto.CompanyId != null)
+                    device = await FindByExpressionAsync(a => a.CompanyId == sendCommandDto.CompanyId);
+                else if (sendCommandDto.Token.Length > 0)
                     device = await FindByExpressionAsync(x => x.Token == sendCommandDto.Token[0]);
 
-                    if (device == null)
-                        return new DcpResponse<string>(null, "الجهاز غير معرف", false);
+                if (device == null)
+                    return new DcpResponse<string>(null, "الجهاز غير معرف", false);
 
-                    // Validate subscription before sending command
-                    bool isValidSubscription = await companySubscriptionBll.IsValidSubscriptionAsync(device.CompanyId.Value);
-                    if (!isValidSubscription)
-                        return new DcpResponse<string>(null, "لقد انتهى اشتراك الباقة الرجاء التواصل مع مدير النظام", false);
-                }
+                // Validate subscription before sending command
+                bool isValidSubscription = await companySubscriptionBll.IsValidSubscriptionAsync(device.CompanyId.Value);
+                if (!isValidSubscription)
+                    return new DcpResponse<string>(null, "لقد انتهى اشتراك الباقة الرجاء التواصل مع مدير النظام", false);
 
                 // Check if device is online before sending command
                 (bool flowControl, DcpResponse<string> value) = await HandleOfflineOnlineStatus(sendCommandDto, device);
@@ -374,7 +347,7 @@ namespace MobCentra.Application.Bll
 
                 // Initialize Google Command Sender
                 string path = configuration.GetSection("adminSdkPath").Value;
-                var googleCommandSender = new GoogleCommandSender(path, "mdmapp-4bc4a");
+                var googleCommandSender = new MDMCommandSender(path, "mdmapp-4bc4a");
                 string[] packages = [];
 
                 // Get blocked packages for blacklist command
@@ -428,7 +401,7 @@ namespace MobCentra.Application.Bll
                         // Log the command for audit purposes
                         await HandleDeviceLog(sendCommandDto, token, packages);
                     }
-                    catch 
+                    catch
                     {
                         continue;
                     }
@@ -543,7 +516,7 @@ namespace MobCentra.Application.Bll
 
 
                 string path = configuration.GetSection("adminSdkPath").Value;
-                var googleCommandSender = new GoogleCommandSender(path, "mdmapp-4bc4a");
+                var googleCommandSender = new MDMCommandSender(path, "mdmapp-4bc4a");
                 if ((sendNotifyDto.GroupId ?? Guid.Empty) != Guid.Empty)
                 {
                     var devices = (await FindAllByExpressionAsync(x => x.GroupId == sendNotifyDto.GroupId)).Select(a => a.Token).ToArray();
@@ -824,27 +797,17 @@ namespace MobCentra.Application.Bll
             if (geoFenc != null)
             {
                 record.CurrentLocation.SRID = geoFenc.Area.SRID;
-                var geoFencSetting = await geoFencSettingBll.FindLastByExpressionAsync(a => a.CompanyId == record.CompanyId);
                 var reader = new WKTReader();
                 var swappedPoint = new Point(record.CurrentLocation.Y, record.CurrentLocation.X)
                 {
                     SRID = record.CurrentLocation.SRID
                 };
                 bool isInside = geoFenc.Area.Contains(swappedPoint);
-                if (!isInside)
-                {
-
-                    record.GeoFencDate = DateTime.UtcNow;
-
-                    if (geoFencSetting == null)
-                    {
-                        await HandleGeFencEmailAsync(record, toEmail);
-                    }
-                    else
-                    {
-                        await HandleGeFencCommandAsync(record, geoFencSetting, toEmail);
-                    }
-                }
+                record.GeoFencDate = DateTime.UtcNow;
+                GeoFencType geoFencType = isInside ? GeoFencType.Inside : GeoFencType.Outside;
+                GeoFencSetting geoFencSetting = await geoFencSettingBll.FindLastByExpressionAsync(a => a.CompanyId == record.CompanyId && a.ActionType == geoFencType);
+                if (geoFencSetting is not null)
+                    await HandleGeFencCommandAsync(record, geoFencSetting, toEmail);
             }
         }
 
@@ -894,7 +857,27 @@ Mobcentra – Centralizing Your Mobile World";
             {
                 try
                 {
-                    await SendCommandAsync(new SendCommandDto { Command = item.Trim(), Token = [record.Token] });
+                    string arg = string.Empty;
+                    var command = await mdmCommandBll.FindByExpressionAsync(a => a.Code == item && a.SettingName != null);
+                    if (command is not null)
+                    {
+                        var setting = await settingBll.FindByExpressionAsync(a => a.CompanyId == record.CompanyId && a.SettingName == command.SettingName);
+                        if (setting is not null)
+                        {
+                            arg = setting.SettingValue;
+                        }
+                    }
+
+                    await SendCommandAsync(new SendCommandDto {
+                        Command = item.Trim(),
+                        Token = [record.Token],
+                        ApkUrl = arg,
+                        FilePath = arg,
+                        FileUrl = arg,
+                        PackageName= arg,
+                        Password =arg,
+                        WallpaperUrl = arg
+                    });
 
                 }
                 catch (Exception)

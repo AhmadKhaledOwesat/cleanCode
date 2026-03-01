@@ -1,4 +1,5 @@
-﻿namespace MobCentra.Application.Dto
+﻿
+namespace MobCentra.Application.Dto
 {
     public class GroupDto : BaseDto<Guid>
     {
@@ -8,7 +9,5 @@
         public Guid? CompanyId { get; set; }
         public string CompanyName { get; set; }
         public string CreatedByName { get; set; }
-
-
     }
 }

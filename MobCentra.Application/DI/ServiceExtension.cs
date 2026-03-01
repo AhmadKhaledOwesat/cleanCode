@@ -71,7 +71,7 @@ namespace MobCentra.Application.DI
             serviceDescriptors.AddScoped<ITasksBll, TasksBll>();
             serviceDescriptors.AddScoped<ICityBll, CityBll>();
             serviceDescriptors.AddScoped<IDeviceBll, DeviceBll>();
-            serviceDescriptors.AddScoped<IGoogleCommandBll, GoogleCommandBll>();
+            serviceDescriptors.AddScoped<IMDMCommandBll, MDMCommandBll>();
             serviceDescriptors.AddScoped<IGeoFencBll, GeoFencBll>();
             serviceDescriptors.AddScoped<IBlackListAppBll, BlackListAppBll>();
             serviceDescriptors.AddScoped<IGroupBll, GroupBll>();

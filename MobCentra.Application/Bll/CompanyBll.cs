@@ -11,7 +11,7 @@ namespace MobCentra.Application.Bll
     /// <summary>
     /// Business logic layer for company management operations
     /// </summary>
-    public class CompanyBll(IBaseDal<Company,Guid,CompanyFilter> baseDal,IDcpMapper dcpMapper,IDeviceBll deviceBll,Lazy<IUserBll> userBll,IAuthenticationManager authenticationManager) : BaseBll<Company,Guid,CompanyFilter>(baseDal) , ICompanyBll
+    public class CompanyBll(IBaseDal<Company,Guid,CompanyFilter> baseDal, IAuthorizationChecker authorizationChecker, IDcpMapper dcpMapper,IDeviceBll deviceBll,Lazy<IUserBll> userBll,IAuthenticationManager authenticationManager) : BaseBll<Company,Guid,CompanyFilter>(baseDal) , ICompanyBll
     {
         /// <summary>
         /// Authenticates a company login by validating company code, user credentials, and device limits
@@ -31,7 +31,10 @@ namespace MobCentra.Application.Bll
             Expression<Func<Users, bool>> loginExpression = x => x.UserName == userName && x.Password == password.HashedPassword() && x.CompanyId ==  company.Id;
             Users users = await userBll.Value.FindByExpressionAsync(loginExpression);
             if (users == null) return new DcpResponse<CompanyDto>(null, "Please check user name and password", false);
-            
+            if (!await authorizationChecker.HasPermissionAsync(users.Id , Guid.Parse(Permissions.QrCode)))
+            {
+                throw new UnauthorizedAccessException("لا تمتلك صلاحية تسجيل جهاز");
+            }
             // Check device limit
             Expression<Func<Device, bool>> cntExpression = x => x.CompanyId == company.Id;
             int count = await deviceBll.GetCountByExpressionAsync(cntExpression);

@@ -2,7 +2,7 @@
 {
     public enum GeoFencType
     {
-        Email = 1,
-        Command = 2
+        Inside = 1,
+        Outside = 2
     }
 }

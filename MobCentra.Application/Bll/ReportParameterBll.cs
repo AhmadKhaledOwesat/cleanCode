@@ -11,5 +11,11 @@ namespace MobCentra.Application.Bll
             searchParameters.Expression = new Func<ReportParameter, bool>(a => a.ReportId == searchParameters.ReportId);
             return base.GetAllAsync(searchParameters);
         }
+        public async Task<dynamic> GetListDataByIdAsync(Guid id,Guid companyId)
+        {
+            ReportParameter reportParameters = await GetByIdAsync(id);
+            dynamic mbDropdownOptions = await baseDal.ExecuteSqlAsync(reportParameters.ParameterQuery.Replace("@CompanyId",companyId.ToString()));
+            return mbDropdownOptions;
+        }
     }
 }

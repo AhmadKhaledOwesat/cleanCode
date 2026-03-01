@@ -6,5 +6,6 @@ namespace MobCentra.Domain.Interfaces
 {
     public interface IReportParameterBll : IBaseBll<ReportParameter, Guid, ReportParameterFilter>
     {
+        Task<dynamic> GetListDataByIdAsync(Guid id, Guid companyId);
     }
 }

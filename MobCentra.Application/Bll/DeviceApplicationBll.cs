@@ -14,6 +14,15 @@ namespace MobCentra.Application.Bll
             searchParameters.Expression = new Func<DeviceApplication, bool>(a => a.DeviceId == searchParameters?.DeviceId);
             return base.GetAllAsync(searchParameters);
         }
+        public async Task<bool> DeleteAsync(string packageName,Guid deviceId)
+        {
+            var app =  await FindByExpressionAsync(a=>a.PackgeName.Equals(packageName) && a.DeviceId == deviceId);
+            if(app != null)
+            {
+                await base.DeleteAsync(app.Id);
+            }
+            return true;
+        }
         public async Task<bool> UpdateStatus(DeviceBlockedApplicationDto[] entity)
         {
 

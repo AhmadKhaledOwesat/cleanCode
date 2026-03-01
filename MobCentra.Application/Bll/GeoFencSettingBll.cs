@@ -1,6 +1,7 @@
 ﻿using MobCentra.Application.Interfaces;
 using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
+using MobCentra.Domain.Enum;
 using MobCentra.Domain.Interfaces;
 
 namespace MobCentra.Application.Bll
@@ -9,7 +10,7 @@ namespace MobCentra.Application.Bll
     {
         public override Task<PageResult<GeoFencSetting>> GetAllAsync(GeoFencSettingFilter searchParameters)
         {
-            searchParameters.Expression = new Func<GeoFencSetting, bool>(a => a.CompanyId == searchParameters?.CompanyId);
+            searchParameters.Expression = new Func<GeoFencSetting, bool>(a => a.CompanyId == searchParameters?.CompanyId && a.ActionType == (GeoFencType)searchParameters.ActionType);
             return base.GetAllAsync(searchParameters);
         }
     }

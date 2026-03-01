@@ -6,5 +6,7 @@
         public int? Active { get; set; }
         public Guid? CompanyId { get; set; }
 
+        public Guid? UserId { get; set; }
+
     }
 }

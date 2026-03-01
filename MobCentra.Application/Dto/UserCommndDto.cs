@@ -4,9 +4,9 @@
     {
         public Guid UserId { get; set; }
         public string UserName { get; set; }
-        public Guid GoogleCommandId { get; set; }
-        public string GoogleCommandName { get; set; }
-        public string GoogleCommandNameEn { get; set; }
+        public Guid MDMCommandId { get; set; }
+        public string MDMCommandName { get; set; }
+        public string MDMCommandNameEn { get; set; }
 
     }
 }

@@ -8,8 +8,8 @@ namespace MobCentra.Domain.Entities
         [ForeignKey(nameof(UserId))]
         public virtual Users User { get; set; }
 
-        public Guid GoogleCommandId { get; set; }
-        [ForeignKey(nameof(GoogleCommandId))]
-        public virtual GoogleCommand GoogleCommand { get; set; }  
+        public Guid MDMCommandId { get; set; }
+        [ForeignKey(nameof(MDMCommandId))]
+        public virtual MDMCommand GoogleCommand { get; set; }  
     }
 }

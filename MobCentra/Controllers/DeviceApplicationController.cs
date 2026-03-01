@@ -21,5 +21,9 @@ namespace MobCentra.Controllers
         [HttpPost]
         [Route("blocked")]
         public async Task<DcpResponse<bool>> UpdateStatusAsync([FromBody] DeviceBlockedApplicationDto[] deviceBlockedApplicationDto) => new DcpResponse<bool>(await DeviceApplicationBll.UpdateStatus(deviceBlockedApplicationDto));
+
+        [HttpGet]
+        [Route("delete/{packageName}/{deviceId}")]
+        public async Task<DcpResponse<bool>> DeleteAsync([FromRoute] string packageName , Guid deviceId) => new DcpResponse<bool>(await DeviceApplicationBll.DeleteAsync(packageName,deviceId));
     }
 }

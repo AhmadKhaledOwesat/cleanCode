@@ -45,8 +45,8 @@ namespace MobCentra.Controllers
             await baseBll.UpdateAsync(entity);
             return new DcpResponse<TId>(entity.Id);
         }
-        [HttpDelete]
-        [Route("{id}")]
+        [HttpGet]
+        [Route("delete/{id}")]
         public virtual async Task<DcpResponse<bool>> DeleteAsync([FromRoute] TId id) => new DcpResponse<bool>(await baseBll.DeleteAsync(id));
         [HttpGet]
         [Route("{id}")]

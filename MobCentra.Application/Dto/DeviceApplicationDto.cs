@@ -16,6 +16,7 @@
     }
     public class DeviceBlockedApplicationDto : BaseDto<Guid>
     {
+
         public bool? IsBlocked { get; set; }
     }
 }

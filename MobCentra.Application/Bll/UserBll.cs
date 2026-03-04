@@ -24,8 +24,9 @@ namespace MobCentra.Application.Bll
             // Hash the password before storing it
             entity.Password = entity.Password.HashedPassword();
             entity.Company = null;
-            if(await GetCountByExpressionAsync(a=>a.UserName == entity.UserName) > 0)
+            if(await GetCountByExpressionAsync(a=>a.UserName == entity.UserName && entity.CompanyId == a.CompanyId) > 0)
                 throw new Exception("رمز المستخدم موجود مسبقاً");
+
             await base.AddAsync(entity);
         }
         

@@ -8,7 +8,7 @@ namespace MobCentra.Domain.Entities
         public string Title { get; set; }
         public string Body { get; set; }
         public string Token { get; set; }
-        public Guid CompanyId { get; set; }
+        public Guid? CompanyId { get; set; }
 
         [JsonIgnore]
         [ForeignKey(nameof(CreatedBy))]

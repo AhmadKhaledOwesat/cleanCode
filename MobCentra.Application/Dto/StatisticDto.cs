@@ -17,6 +17,8 @@
         public dynamic ResultOt { get; set; }
         public Guid? CompanyId { get; set; }
         public string ChartType { get; set; }
+        public string HintAr { get; set; }
+        public string HintOt { get; set; }
 
     }
 }

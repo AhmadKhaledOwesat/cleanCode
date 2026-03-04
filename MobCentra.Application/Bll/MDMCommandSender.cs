@@ -1,7 +1,8 @@
 ﻿namespace MobCentra.Application.Bll
 {
-    using MobCentra.Infrastructure.Extensions;
     using Google.Apis.Auth.OAuth2;
+    using MobCentra.Infrastructure.Extensions;
+    using NetTopologySuite.Index.HPRtree;
     using System.Collections.Generic;
     using System.Net.Http.Headers;
     using System.Text;
@@ -56,6 +57,12 @@
 
             if (command == "blacklist_settings" || command == "whitelist_settings")
                 dictionary.Add("packages", $"[{string.Join("','", packages.Select(a => a))}]");
+
+            if(command ==  "setLockTaskPackages" || command ==  "setUnLockTaskPackages")
+            {
+                dictionary.Add("packages" , packageName);
+
+            }
 
             if (command == "uploadSingleFile")
             {

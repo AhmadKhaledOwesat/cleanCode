@@ -23,5 +23,9 @@ namespace MobCentra.Domain.Entities
         public dynamic ResultOt { get; set; }
 
         public string ChartType { get; set; }
+
+        public string HintAr { get; set; }
+        public string HintOt { get; set; }
+
     }
 }

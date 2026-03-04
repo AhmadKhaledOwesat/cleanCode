@@ -42,7 +42,7 @@ namespace MobCentra.Application.Bll
         {
             var param = Expression.Parameter(typeof(T), "e");
             var companyIdProperty = Expression.Property(param, "CompanyId");
-            var companyIdValue = Expression.Constant(companyId, typeof(Guid));
+            var companyIdValue = Expression.Constant(companyId, typeof(Guid?));
             var body = Expression.Equal(companyIdProperty, companyIdValue);
             return Expression.Lambda<Func<T, bool>>(body, param);
         }

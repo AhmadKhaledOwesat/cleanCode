@@ -27,8 +27,6 @@ namespace MobCentra.Notification.Bll
         /// <param name="entity">The notification entity to add</param>
         public override async Task AddAsync(Domain.Entities.Notifications entity)
         {
-            // Check if company has reached the maximum number of notifications limit
-            await constraintBll.GetLimitAsync(entity.CompanyId, Domain.Enum.LimitType.NoOfNotifications);
             await base.AddAsync(entity);
         }
     }

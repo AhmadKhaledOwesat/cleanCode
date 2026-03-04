@@ -29,10 +29,16 @@ namespace MobCentra.Application.Bll
             foreach (var item in entity)
             {
                 DeviceApplication deviceApplication = await base.GetByIdAsync(item.Id);
+                Device device = await deviceBll.GetByIdAsync(deviceApplication.DeviceId.Value);
+
                 if (deviceApplication != null)
                 {
-                    deviceApplication.IsBlocked = item.IsBlocked;
-                    await base.UpdateAsync(deviceApplication);
+                    if(device.IsOnline ==1)
+                    {
+                        deviceApplication.IsBlocked = item.IsBlocked;
+                        await base.UpdateAsync(deviceApplication);
+                        await deviceBll.SendCommandAsync(new SendCommandDto { Token = [device.Token], PackageName = deviceApplication.PackgeName, Command = item.IsBlocked.Value ? "setLockTaskPackages" : "setUnLockTaskPackages" });
+                    }
                 }
             }
             return true;

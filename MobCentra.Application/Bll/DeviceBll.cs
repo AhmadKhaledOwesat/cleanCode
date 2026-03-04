@@ -11,13 +11,14 @@ using NetTopologySuite.IO;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Linq.Expressions;
+using static Grpc.Core.Metadata;
 
 namespace MobCentra.Application.Bll
 {
     /// <summary>
     /// Business logic layer for device management operations including registration, commands, notifications, and tracking
     /// </summary>
-    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal, IMDMCommandBll mdmCommandBll, IDevicesGeoFenceLogBll devicesGeoFenceLogBll, INotificationBll notificationBll, IDeviceBatteryTransBll deviceBatteryTransBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IGeoFencSettingBll geoFencSettingBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
+    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal, IMDMCommandBll mdmCommandBll, IDevicesGeoFenceLogBll devicesGeoFenceLogBll, INotificationBll notificationBll, IDeviceBatteryTransBll deviceBatteryTransBll,IEmailLogBll emailLogBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IGeoFencSettingBll geoFencSettingBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
     {
 
         /// <summary>
@@ -515,6 +516,9 @@ namespace MobCentra.Application.Bll
                 //     return new DcpResponse<string>(null, "لقد انتهى اشتراك الباقة الرجاء التواصل مع مدير النظام", false);
 
 
+
+
+
                 string path = configuration.GetSection("adminSdkPath").Value;
                 var googleCommandSender = new MDMCommandSender(path, "mdmapp-4bc4a");
                 if ((sendNotifyDto.GroupId ?? Guid.Empty) != Guid.Empty)
@@ -527,6 +531,11 @@ namespace MobCentra.Application.Bll
                     var devices = (await FindAllByExpressionAsync(x => x.CompanyId == sendNotifyDto.CompanyId)).Select(a => a.Token).ToArray();
                     sendNotifyDto.Token = devices;
                 }
+
+                var device = await FindByExpressionAsync(a => a.Token == sendNotifyDto.Token[0]);
+
+                await constraintBll.GetLimitAsync(device.CompanyId.Value, Domain.Enum.LimitType.NoOfNotifications);
+
 
                 foreach (var token in sendNotifyDto.Token)
                 {
@@ -559,11 +568,11 @@ namespace MobCentra.Application.Bll
             await HandleQueuAsync(record);
             await HandelEmailNofication(entity, record);
             await HandleTracking(entity, record);
+            await HandleGeoFencAsync(record, entity);
             await UpdateDataAsync(entity, record);
-            await HandleGeoFencAsync(record);
         }
 
-        private async Task HandleGeoFencAsync(Device record)
+        private async Task HandleGeoFencAsync(Device record, Device device)
         {
             try
             {
@@ -579,6 +588,7 @@ namespace MobCentra.Application.Bll
 
                     int type = isInsideAnyFence ? 1 : 0;
                     DateTime toDay = DateTime.UtcNow;
+                    device.GeoFenceStatus = type;
                     DevicesGeoFenceLog devicesGeoFenceLog = await devicesGeoFenceLogBll.FindLastByExpressionAsync(a => a.DeviceId == record.Id && a.TransType == type);
                     if (devicesGeoFenceLog == null)
                     {
@@ -644,6 +654,7 @@ namespace MobCentra.Application.Bll
             entity.DeviceDateTime ??= record.DeviceDateTime;
             entity.GeoFencDate ??= record.GeoFencDate;
             entity.TrackActivated ??= record.TrackActivated;
+            entity.GeoFenceStatus ??= record.GeoFenceStatus;
             if (!entity.IsFromBackOffice)
             {
                 entity.LastSeenDate = DateTime.UtcNow;
@@ -841,7 +852,9 @@ Please review this event in the MDM dashboard and take appropriate action if nee
 Best regards,
 <br/>
 Mobcentra – Centralizing Your Mobile World";
-            await emailSender.SendAsync("Geofence notification", body, toEmail.SettingValue);
+           string status =  await emailSender.SendAsync("Geofence notification", body, toEmail.SettingValue);
+            await emailLogBll.AddAsync(new EmailLog { CompanyId = record.CompanyId, DeviceId = record.Id, Function = "GeofenceStatus", ReceivedEmail = toEmail.SettingValue, SendStatus = status });
+
         }
 
         public async Task<DcpResponse<bool>> HandleGeoFencCityAsync(List<GeoFencCityDto> geoFencCityDtos)
@@ -853,7 +866,7 @@ Mobcentra – Centralizing Your Mobile World";
             if(oldRecords.Count  > 0)
             await geoFencBll.DeleteRangeAsync(oldRecords);
 
-            List<GeoFenc> geoFencs = new();
+            List<GeoFenc> geoFencs = [];
 
             geoFencCityDtos.ForEach(a =>
             {
@@ -951,7 +964,11 @@ Mobcentra – Centralizing Your Mobile World";
                                          Best regards,
                                          <br/>
                                          MobCentra";
-                await emailSender.SendAsync("Battery Warning Level", body, toEmail.SettingValue);
+               string status =  await emailSender.SendAsync("Battery Warning Level", body, toEmail.SettingValue);
+                await emailLogBll.AddAsync(new EmailLog { CompanyId = record.CompanyId, DeviceId = record.Id, Function = "BatteryLevel", ReceivedEmail = toEmail.SettingValue, SendStatus = status });
+
+
+
             }
         }
         private async Task HandleTimeMatchNotifyAsync(Device record, Setting toEmail)
@@ -1002,7 +1019,9 @@ This is a system-generated email. Please do not reply to this message.
 Regards,
 <br/>
 Mobcentra System Notification";
-                await emailSender.SendAsync("Time Match Warning", body, toEmail.SettingValue);
+               string status =   await emailSender.SendAsync("Time Match Warning", body, toEmail.SettingValue);
+                await emailLogBll.AddAsync(new EmailLog { CompanyId = record.CompanyId, DeviceId = record.Id, Function = "TimeMatch", ReceivedEmail = toEmail.SettingValue, SendStatus = status });
+
             }
         }
 

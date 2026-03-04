@@ -77,6 +77,7 @@ namespace MobCentra.Application.DI
             serviceDescriptors.AddScoped<IGroupBll, GroupBll>();
             serviceDescriptors.AddScoped<ICommandGroupBll, CommandGroupBll>();
             serviceDescriptors.AddScoped<IEmailSender, EmailSender>();
+            serviceDescriptors.AddScoped<IEmailLogBll, EmailLogBll>();
             serviceDescriptors.AddScoped<IDeviceStorageFileBll, DeviceStorageFileBll>();
             serviceDescriptors.AddScoped<ICompanySubscriptionBll, CompanySubscriptionBll>();
             serviceDescriptors.AddScoped<ISettingBll, SettingBll>();

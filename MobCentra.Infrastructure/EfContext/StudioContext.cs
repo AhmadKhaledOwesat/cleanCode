@@ -47,6 +47,7 @@ namespace MobCentra.Infrastructure.EfContext
         public DbSet<ProfileFeature> ProfileFeatures { get; set; }
         public DbSet<Notifications> Notifications { get; set; }
         public DbSet<DeviceBatteryTrans> DeviceBatteryTrans { get; set; }
+        public DbSet<EmailLog> EmailLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Company>().ToTable("Companies");
@@ -57,6 +58,7 @@ namespace MobCentra.Infrastructure.EfContext
             modelBuilder.Entity<Device>().ToTable("Devices").Property(a => a.CurrentLocation).HasColumnType("geometry");
             modelBuilder.Entity<GeoFenc>().ToTable("GeoFencs");
             modelBuilder.Entity<DevicesGeoFenceLog>().ToTable("DevicesGeoFenceLog").Property(a => a.Coordinations).HasColumnType("geometry");
+            modelBuilder.Entity<EmailLog>().ToTable("EmailLog");
 
         }
     }

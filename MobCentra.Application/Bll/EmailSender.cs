@@ -27,34 +27,44 @@ namespace MobCentra.Application.Bll
         => _options = options.Value;
 
 
-        public async Task SendAsync(string subject, string body,string to)
+        public async Task<string> SendAsync(string subject, string body,string to)
         {
-            MimeMessage mimeMessage = new();
-            mimeMessage.From.Add(new MailboxAddress(_options.FromName, _options.FromAddress));
-            mimeMessage.To.Add(new MailboxAddress("Client", to));
-            mimeMessage.Subject = subject;
-            var bodyBuilder = new BodyBuilder
+            try
             {
-                HtmlBody = body
-            };
-            mimeMessage.Body = bodyBuilder.ToMessageBody();
-            using var client = new SmtpClient();
-            client.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
-            {
-                if (certificate is X509Certificate2 cert)
+                MimeMessage mimeMessage = new();
+                mimeMessage.From.Add(new MailboxAddress(_options.FromName, _options.FromAddress));
+                mimeMessage.To.Add(new MailboxAddress("Client", to));
+                mimeMessage.Subject = subject;
+                var bodyBuilder = new BodyBuilder
                 {
-                    return cert.Subject.Contains("smtp.a.cloudfilter.net");
-                }
-                return false;
-            };
-            await client.ConnectAsync(_options.Smtp.Host, _options.Smtp.Port,
-            _options.Smtp.UseStartTls ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
+                    HtmlBody = body
+                };
+                mimeMessage.Body = bodyBuilder.ToMessageBody();
+                using var client = new SmtpClient();
+                client.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
+                {
+                    if (certificate is X509Certificate2 cert)
+                    {
+                        return cert.Subject.Contains("smtp.a.cloudfilter.net");
+                    }
+                    return false;
+                };
+                await client.ConnectAsync(_options.Smtp.Host, _options.Smtp.Port,
+                _options.Smtp.UseStartTls ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
 
-            if (!string.IsNullOrWhiteSpace(_options.Smtp.User))
-                await client.AuthenticateAsync(_options.Smtp.User, _options.Smtp.Password);
+                if (!string.IsNullOrWhiteSpace(_options.Smtp.User))
+                    await client.AuthenticateAsync(_options.Smtp.User, _options.Smtp.Password);
 
-            await client.SendAsync(mimeMessage);
-            await client.DisconnectAsync(true);
+                await client.SendAsync(mimeMessage);
+                await client.DisconnectAsync(true);
+                return "Sent";
+            }
+            catch (Exception ex)
+            {
+                return ex.InnerException?.Message ?? ex.Message;
+                throw;
+            }
+            
         }
     }
 }

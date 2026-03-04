@@ -63,6 +63,8 @@ namespace MobCentra.Domain.Entities
         [ForeignKey(nameof(CreatedBy))]
         public virtual Users User { get; set; }
 
+        public int? GeoFenceStatus { get; set; }
+
 
 
 

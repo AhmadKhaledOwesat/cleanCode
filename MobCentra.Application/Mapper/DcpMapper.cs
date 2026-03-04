@@ -1,4 +1,4 @@
-﻿
+
 using AutoMapper;
 using MobCentra.Application.Dto;
 using MobCentra.Domain.Entities;
@@ -24,6 +24,8 @@ namespace MobCentra.Application.Mapper
             CreateMap<City, CityDto>()
                 .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.User == null ? "مدير النظام" : a.User.FullName))
                 .ReverseMap();
+            CreateMap<EmailLog, EmailLogDto>().ReverseMap();
+            CreateMap<PageResult<EmailLog>, PageResult<EmailLogDto>>().ReverseMap();
             CreateMap<Tasks, TasksDto>()
                 .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.CreatedUser == null ? "مدير النظام" : a.CreatedUser.FullName))
                 .ReverseMap();

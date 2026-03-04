@@ -11,7 +11,7 @@ namespace MobCentra.Application.Bll
     /// <summary>
     /// Business logic layer for user management operations
     /// </summary>
-    public class UserBll(IBaseDal<Users, Guid, UserFilter> baseDal, IAuthenticationManager authenticationManager, ISettingBll settingBll, IEmailSender emailSender, IConstraintBll constraintBll, IUserGroupBll userGroupBll, IUserCommandBll userCommandBll, IDcpMapper dcpMapper, IUserRoleBll userRoleBll, ICompanyBll companyBll, ICompanySubscriptionBll companySubscriptionBll) : BaseBll<Users, Guid, UserFilter>(baseDal), IUserBll
+    public class UserBll(IBaseDal<Users, Guid, UserFilter> baseDal, IEmailLogBll emailLogBll, IAuthenticationManager authenticationManager, ISettingBll settingBll, IEmailSender emailSender, IConstraintBll constraintBll, IUserGroupBll userGroupBll, IUserCommandBll userCommandBll, IDcpMapper dcpMapper, IUserRoleBll userRoleBll, ICompanyBll companyBll, ICompanySubscriptionBll companySubscriptionBll) : BaseBll<Users, Guid, UserFilter>(baseDal), IUserBll
     {
         /// <summary>
         /// Adds a new user to the system after validating constraints and hashing the password
@@ -194,7 +194,8 @@ namespace MobCentra.Application.Bll
 ";
 
             // Get notification email from settings and send password reset email
-            await emailSender.SendAsync("Password Reset", emailBody, user.Email);
+            string status = await emailSender.SendAsync("Password Reset", emailBody, user.Email);
+            await emailLogBll.AddAsync(new EmailLog { CompanyId = user.CompanyId, Function = "PasswordReset", ReceivedEmail = user.Email, SendStatus = status });
             return new DcpResponse<string>("");
         }
 

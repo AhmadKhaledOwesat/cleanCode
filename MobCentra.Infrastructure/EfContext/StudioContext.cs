@@ -1,4 +1,4 @@
-﻿using MobCentra.Domain.Entities;
+using MobCentra.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using TaskStatus = MobCentra.Domain.Entities.TaskStatus;
 
@@ -52,6 +52,7 @@ namespace MobCentra.Infrastructure.EfContext
             modelBuilder.Entity<Company>().ToTable("Companies");
             modelBuilder.Entity<DeviceNotification>().ToTable("DeviceNotifications");
             modelBuilder.Entity<City>().ToTable("City").Property(a => a.Area).HasColumnType("geometry");
+            modelBuilder.Entity<City>().HasQueryFilter(c => !c.IsDeleted);
             modelBuilder.Entity<DeviceQueu>().ToTable("DeviceQueus");
             modelBuilder.Entity<Device>().ToTable("Devices").Property(a => a.CurrentLocation).HasColumnType("geometry");
             modelBuilder.Entity<GeoFenc>().ToTable("GeoFencs");

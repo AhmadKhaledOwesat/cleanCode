@@ -324,14 +324,14 @@ namespace MobCentra.Application.Bll
                 // Validate device if token is provided
 
                 if (sendCommandDto.GroupId != null)
-                    device = await FindByExpressionAsync(x => x.GroupId == sendCommandDto.GroupId);
+                    device = await FindByExpressionAsync(x => x.GroupId == sendCommandDto.GroupId && x.IsOnline ==1);
                 else if (sendCommandDto.CompanyId != null)
-                    device = await FindByExpressionAsync(a => a.CompanyId == sendCommandDto.CompanyId);
+                    device = await FindByExpressionAsync(a => a.CompanyId == sendCommandDto.CompanyId && a.IsOnline == 1);
                 else if (sendCommandDto.Token.Length > 0)
                     device = await FindByExpressionAsync(x => x.Token == sendCommandDto.Token[0]);
 
                 if (device == null)
-                    return new DcpResponse<string>(null, "الجهاز غير معرف", false);
+                    return new DcpResponse<string>(null, "الجهاز غير معرف او مغلق حالياً", false);
 
                 // Validate subscription before sending command
                 bool isValidSubscription = await companySubscriptionBll.IsValidSubscriptionAsync(device.CompanyId.Value);
@@ -374,14 +374,14 @@ namespace MobCentra.Application.Bll
                 // Expand tokens if group ID is provided
                 if ((sendCommandDto.GroupId ?? Guid.Empty) != Guid.Empty)
                 {
-                    var devices = (await FindAllByExpressionAsync(x => x.GroupId == sendCommandDto.GroupId)).Select(a => a.Token).ToArray();
+                    var devices = (await FindAllByExpressionAsync(x => x.GroupId == sendCommandDto.GroupId && x.IsOnline ==1)).Select(a => a.Token).ToArray();
                     sendCommandDto.Token = devices;
                 }
 
                 // Expand tokens if company ID is provided
                 if ((sendCommandDto.CompanyId ?? Guid.Empty) != Guid.Empty)
                 {
-                    var devices = (await FindAllByExpressionAsync(x => x.CompanyId == sendCommandDto.CompanyId)).Select(a => a.Token).ToArray();
+                    var devices = (await FindAllByExpressionAsync(x => x.CompanyId == sendCommandDto.CompanyId && x.IsOnline == 1)).Select(a => a.Token).ToArray();
                     sendCommandDto.Token = devices;
                 }
 
@@ -777,6 +777,7 @@ namespace MobCentra.Application.Bll
                     if (setting != null && toEmail != null)
                     {
                         await HandleBatteryNotifyAsync(record, setting, toEmail);
+                        await HandleTimeMatchNotifyAsync(record, toEmail);
                         await HandleGeoFencNotifyAsync(record, toEmail);
                     }
                 }
@@ -794,7 +795,7 @@ namespace MobCentra.Application.Bll
         /// <param name="toEmail">The email setting for notifications</param>
         private async Task HandleGeoFencNotifyAsync(Device record, Setting toEmail)
         {
-            if (record.GeoFencDate.HasValue && DateTime.UtcNow.Date == record.GeoFencDate.Value.Date) return;
+            //if (record.GeoFencDate.HasValue && DateTime.UtcNow.Date == record.GeoFencDate.Value.Date) return;
 
             var geoFencs = await geoFencBll.FindAllByExpressionAsync(a => a.DeviceId == record.Id);
             if (geoFencs != null && geoFencs.Count > 0)
@@ -951,6 +952,57 @@ Mobcentra – Centralizing Your Mobile World";
                                          <br/>
                                          MobCentra";
                 await emailSender.SendAsync("Battery Warning Level", body, toEmail.SettingValue);
+            }
+        }
+        private async Task HandleTimeMatchNotifyAsync(Device record, Setting toEmail)
+        {
+            if (record.GeoFencDate.HasValue && DateTime.UtcNow.Date == record.GeoFencDate.Value.Date) return;
+            if (record.LastSeenDate == null) return;
+            DateTime lastSeenDate = record.LastSeenDate.Value;
+            var deviceTimeMargin = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.CheckTimeMargin" && a.CompanyId == record.CompanyId);
+            if (deviceTimeMargin is not null)
+            {
+                if (record.DeviceDateTime is null)
+                {
+                    record.IsWrongTime = true;
+                }
+                else
+                {
+                    record.IsWrongTime = Math.Abs(lastSeenDate.Subtract(record.DeviceDateTime.Value).TotalSeconds) > int.Parse(deviceTimeMargin.SettingValue);
+                }
+            }
+            if (record.IsWrongTime ?? false)
+            {
+                record.GeoFencDate = DateTime.UtcNow;
+                string body = $@"Dear Administrator,
+<br/>
+
+This is an automated notification from *Mobcentra*.
+<br/>
+
+Our monitoring system has detected that the date and/or time settings on one or more managed devices are not synchronized correctly.
+<br/>
+
+*Device Details:*
+<br/>
+* Device Name: {record.DeviceName}
+<br/>
+* Last Check-in:{record.LastSeenDate?.ToString("yyyy MM dddd hh:mm tt")}
+<br/>
+* Detected Device Time: {record.DeviceDateTime?.ToString("yyyy MM dddd hh:mm tt")}
+<br/>
+An incorrect device date and time may affect security policies, certificate validation, application access, and compliance status.
+<br/>
+*Available Action in Mobcentra:*
+<br/>
+You can use the *“Correct Date & Time”* function directly from the Mobcentra portal to remotely synchronize the device time with the server.
+<br/>
+This is a system-generated email. Please do not reply to this message.
+<br/>
+Regards,
+<br/>
+Mobcentra System Notification";
+                await emailSender.SendAsync("Time Match Warning", body, toEmail.SettingValue);
             }
         }
 

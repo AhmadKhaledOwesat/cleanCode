@@ -1,4 +1,5 @@
-﻿using MobCentra.Application.Dto;
+using MobCentra.Application.Dto;
+using MobCentra.Application.Interfaces;
 using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
@@ -12,7 +13,7 @@ namespace MobCentra.Application.Bll
     /// <summary>
     /// Business logic layer for city/area management operations
     /// </summary>
-    public class CityBll(IBaseDal<City, Guid, CityFilter> baseDal, IConstraintBll constraintBll) : BaseBll<City, Guid, CityFilter>(baseDal), ICityBll
+    public class CityBll(IBaseDal<City, Guid, CityFilter> baseDal, IConstraintBll constraintBll, IIdentityManager<Guid> identityManager) : BaseBll<City, Guid, CityFilter>(baseDal), ICityBll
     {
         /// <summary>
         /// Retrieves cities with filtering by keyword (name in Arabic or Other) and company
@@ -33,6 +34,20 @@ namespace MobCentra.Application.Bll
         }
 
         /// <summary>
+        /// Soft deletes a city by setting IsDeleted, DeletedBy, and DeletedDate.
+        /// </summary>
+        public override async Task<bool> DeleteAsync(Guid id)
+        {
+            var entity = await base.GetByIdAsync(id);
+            if (entity == null) return false;
+            entity.IsDeleted = true;
+            entity.DeletedBy = identityManager.CurrentUserId;
+            entity.DeletedDate = DateTime.UtcNow;
+            await base.UpdateAsync(entity);
+            return true;
+        }
+
+        /// <summary>
         /// Adds a new city/area after validating company area limits
         /// </summary>
         /// <param name="entity">The city entity to add</param>
@@ -40,6 +55,21 @@ namespace MobCentra.Application.Bll
         {
             // Check if company has reached the maximum number of areas limit
             await constraintBll.GetLimitAsync(entity.CompanyId.Value, Domain.Enum.LimitType.NoOfArea);
+            if (entity.RestrictedArea is not null)
+            {
+                var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+                var coordinates = new List<Coordinate>();
+                var polygons = JsonConvert.DeserializeObject<List<List<CoordinateDto>>>(entity.RestrictedArea);
+                foreach (var polygon in polygons)
+                    foreach (var point in polygon)
+                        coordinates.Add(new Coordinate(point.lng, point.lat));
+
+                if (!coordinates.First().Equals2D(coordinates.Last()))
+                {
+                    coordinates.Add(coordinates[0]);
+                }
+                entity.Area = geometryFactory.CreatePolygon([.. coordinates]);
+            }
             await base.AddAsync(entity);
         }
 

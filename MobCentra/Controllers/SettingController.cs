@@ -34,6 +34,5 @@ namespace MobCentra.Controllers
         {
             return new DcpResponse<SettingDto>(mapper.Map<SettingDto>(await settingBll.GetSettingByKeyAsync(settingName)));
         }
-
     }
 }

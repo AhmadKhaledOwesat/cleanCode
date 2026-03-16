@@ -44,6 +44,7 @@ namespace MobCentra.Application.Bll
             entity.DeletedBy = identityManager.CurrentUserId;
             entity.DeletedDate = DateTime.UtcNow;
             await base.UpdateAsync(entity);
+           await baseDal.ExecuteSqlAsync($"delete [GeoFencs] Where cityid = '{id}'");
             return true;
         }
 

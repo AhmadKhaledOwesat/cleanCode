@@ -19,6 +19,7 @@ namespace MobCentra.Application.Mapper
         }
         public DcpMapper()
         {
+            CreateMap<DevicesGeoFenceLogDto, DevicesGeoFenceLog>();
             CreateMap<DevicesGeoFenceLog, DevicesGeoFenceLogDto>().ForMember(dest => dest.Coordinations, src => src.MapFrom(a => a.Coordinations == null ? string.Empty : $"{a.Coordinations.X},{a.Coordinations.Y}"));
             CreateMap<Users, UsersDto>().ReverseMap();
             CreateMap<City, CityDto>()
@@ -141,6 +142,13 @@ namespace MobCentra.Application.Mapper
             .ReverseMap();
             CreateMap<PageResult<ProfileFeature>, PageResult<ProfileFeatureDto>>().ReverseMap();
 
+            CreateMap<ProfileApplication, ProfileApplicationDto>()
+          .ForMember(dest => dest.ApplicationName, src => src.MapFrom(a => a.Application == null ? string.Empty : a.Application.NameAr))
+          .ForMember(dest => dest.ProfileName, src => src.MapFrom(a => a.Profile == null ? string.Empty : a.Profile.NameAr))
+          .ReverseMap();
+            CreateMap<PageResult<ProfileApplication>, PageResult<ProfileApplicationDto>>().ReverseMap();
+
+
             CreateMap<PageResult<City>, PageResult<CityDto>>().ReverseMap();
             CreateMap<Domain.Entities.Version, VersionDto>().ReverseMap();
             CreateMap<PageResult<Domain.Entities.Version>, PageResult<VersionDto>>().ReverseMap();
@@ -157,6 +165,7 @@ namespace MobCentra.Application.Mapper
             CreateMap<PageResult<ReportParameter>, PageResult<ReportParameterDto>>().ReverseMap();
             CreateMap<Notifications, NotificationDto>()
                 .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.CreatedUser == null ? "مدير النظام" : a.CreatedUser.FullName))
+                .ForMember(dest => dest.DeviceName, src => src.MapFrom(a => a.Device == null ? "غير معرف" : a.Device.DeviceName))
                 .ReverseMap();
             CreateMap<PageResult<Notifications>, PageResult<NotificationDto>>().ReverseMap();
         }

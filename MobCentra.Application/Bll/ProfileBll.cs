@@ -10,7 +10,7 @@ namespace MobCentra.Application.Bll
     /// <summary>
     /// Business logic layer for profile management operations
     /// </summary>
-    public class ProfileBll(IBaseDal<Profile, Guid, ProfileFilter> baseDal, IDeviceQueuBll deviceQueuBll, IConstraintBll constraintBll, IProfileFeatureBll profileFeatureBll, IDeviceBll deviceBll) : BaseBll<Profile, Guid, ProfileFilter>(baseDal), IProfileBll
+    public class ProfileBll(IBaseDal<Profile, Guid, ProfileFilter> baseDal, IDeviceQueuBll deviceQueuBll, IConstraintBll constraintBll, IProfileFeatureBll profileFeatureBll, IProfileApplicationBll profileApplicationBll, IDeviceBll deviceBll) : BaseBll<Profile, Guid, ProfileFilter>(baseDal), IProfileBll
     {
         /// <summary>
         /// Retrieves profiles with filtering by keyword (name in Arabic or Other), company, and active status
@@ -63,6 +63,7 @@ namespace MobCentra.Application.Bll
         {
             // Update profile features before updating profile
             await HandleFeatures(entity);
+            await HandleProfileApplication(entity);
             await base.UpdateAsync(entity);
             
             // Queue all devices using this profile for refresh
@@ -94,6 +95,22 @@ namespace MobCentra.Application.Bll
             
             // Add new features
             await profileFeatureBll.AddRangeAsync([.. entity.ProfileFeatures]);
+
+
+        }
+
+        private async Task HandleProfileApplication(Profile entity)
+        {
+            // Find all existing profile features
+            Expression<Func<ProfileApplication, bool>> expression = x => x.ProfileId == entity.Id;
+            List<ProfileApplication> profileFeatures = await profileApplicationBll.FindAllByExpressionAsync(expression);
+
+            // Delete existing features if any
+            if (profileFeatures.Count > 0)
+                await profileApplicationBll.DeleteRangeAsync(profileFeatures);
+
+            // Add new features
+            await profileApplicationBll.AddRangeAsync([.. entity.ProfileApplications]);
 
 
         }

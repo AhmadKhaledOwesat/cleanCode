@@ -7,7 +7,7 @@ namespace MobCentra.Notification.Bll
     /// <summary>
     /// Business logic layer for notification management operations
     /// </summary>
-    public class NotificationBll(IBaseDal<MobCentra.Domain.Entities.Notifications, Guid, NotificationFilter> baseDal,IConstraintBll constraintBll) : BaseBll<MobCentra.Domain.Entities.Notifications, Guid, NotificationFilter>(baseDal), INotificationBll
+    public class NotificationBll(IBaseDal<MobCentra.Domain.Entities.Notifications, Guid, NotificationFilter> baseDal,Lazy<IDeviceBll> deviceBll) : BaseBll<MobCentra.Domain.Entities.Notifications, Guid, NotificationFilter>(baseDal), INotificationBll
     {
         /// <summary>
         /// Retrieves notifications filtered by company ID
@@ -27,6 +27,7 @@ namespace MobCentra.Notification.Bll
         /// <param name="entity">The notification entity to add</param>
         public override async Task AddAsync(Domain.Entities.Notifications entity)
         {
+            entity.DeviceId = (await deviceBll.Value.FindByExpressionAsync(a=>a.Token == entity.Token)).Id;
             await base.AddAsync(entity);
         }
     }

@@ -11,14 +11,13 @@ using NetTopologySuite.IO;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Linq.Expressions;
-using static Grpc.Core.Metadata;
 
 namespace MobCentra.Application.Bll
 {
     /// <summary>
     /// Business logic layer for device management operations including registration, commands, notifications, and tracking
     /// </summary>
-    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal, IMDMCommandBll mdmCommandBll, IDevicesGeoFenceLogBll devicesGeoFenceLogBll, INotificationBll notificationBll, IDeviceBatteryTransBll deviceBatteryTransBll,IEmailLogBll emailLogBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IGeoFencSettingBll geoFencSettingBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
+    public class DeviceBll(IBaseDal<Device, Guid, DeviceFilter> baseDal, ICityBll cityBll, IProfileApplicationBll profileApplicationBll, IMDMCommandBll mdmCommandBll, IDevicesGeoFenceLogBll devicesGeoFenceLogBll, INotificationBll notificationBll, IDeviceBatteryTransBll deviceBatteryTransBll, IEmailLogBll emailLogBll, IDeviceTransactionBll deviceTransactionBll, IEmailSender emailSender, IConstraintBll constraintBll, IVersionBll versionBll, Lazy<ICompanyBll> companyBll, Lazy<IGroupBll> groupBll, Lazy<IProfileBll> profileBll, Lazy<IDeviceApplicationBll> deviceApplicationBll, ISettingBll settingBll, IConfiguration configuration, IGeoFencBll geoFencBll, IGeoFencSettingBll geoFencSettingBll, IDeviceLogBll deviceLogBll, ICompanySubscriptionBll companySubscriptionBll, IDeviceQueuBll deviceQueuBll) : BaseBll<Device, Guid, DeviceFilter>(baseDal), IDeviceBll
     {
 
         /// <summary>
@@ -110,6 +109,14 @@ namespace MobCentra.Application.Bll
             // Send initial sync commands to device
             await SendCommandAsync(new SendCommandDto { Command = "syncDeviceInfo", Token = [entity.Token] });
             await SendCommandAsync(new SendCommandDto { Command = "getStorageInfo", Token = [entity.Token] });
+
+            PageResult<ProfileApplication> apps = await profileApplicationBll.GetAllAsync(new ProfileApplicationFilter { ProfileId = entity.ProfileId, PagingParameters = new PagingParameters { PageNumber = 1, PageSize = 500 } });
+
+            foreach (var item in apps.Collections)
+            {
+                string appPath = $"https://mobcentra.com\\assets\\applications\\{item.Application.File}";
+                await SendCommandAsync(new SendCommandDto { Command = "silent_install", Token = [entity.Token], ApkUrl = appPath });
+            }
 
         }
 
@@ -216,6 +223,8 @@ namespace MobCentra.Application.Bll
                 && (searchParameters.Keyword.IsNullOrEmpty() || a.Name.Contains(searchParameters?.Keyword))
                 && (searchParameters.GroupId == null || a.GroupId == searchParameters.GroupId)
                 && (searchParameters.StatusId == -1 || (a.IsOnline == searchParameters.StatusId))
+                && (searchParameters.GeoFenceStatus == -1 || (a.GeoFenceStatus == searchParameters.GeoFenceStatus))
+                && (searchParameters.IMEI.IsNullOrEmpty() || a.IMEI.Contains(searchParameters?.IMEI))
                 && (searchParameters.VersionNo == null || (a.AppVersion == searchParameters.VersionNo))
                 && (searchParameters.Percentage == "0" || searchParameters.Percentage.IsNullOrEmpty() || (Convert.ToInt16(a.BatteryPercentage) <= Convert.ToInt16(searchParameters.Percentage)))
                 && (searchParameters.PinnedStatusId == -1 || ((searchParameters.PinnedStatusId == 1 && !a.UnpinedDate.HasValue) || (searchParameters.PinnedStatusId == 0 && a.UnpinedDate.HasValue)))
@@ -325,7 +334,7 @@ namespace MobCentra.Application.Bll
                 // Validate device if token is provided
 
                 if (sendCommandDto.GroupId != null)
-                    device = await FindByExpressionAsync(x => x.GroupId == sendCommandDto.GroupId && x.IsOnline ==1);
+                    device = await FindByExpressionAsync(x => x.GroupId == sendCommandDto.GroupId && x.IsOnline == 1);
                 else if (sendCommandDto.CompanyId != null)
                     device = await FindByExpressionAsync(a => a.CompanyId == sendCommandDto.CompanyId && a.IsOnline == 1);
                 else if (sendCommandDto.Token.Length > 0)
@@ -372,10 +381,16 @@ namespace MobCentra.Application.Bll
                     await base.UpdateAsync(device);
                 }
 
+                if (sendCommandDto.Command == "setDateTime")
+                {
+                    device.DeviceDateTimeMismatch = null;
+                    await base.UpdateAsync(device);
+                }
+
                 // Expand tokens if group ID is provided
                 if ((sendCommandDto.GroupId ?? Guid.Empty) != Guid.Empty)
                 {
-                    var devices = (await FindAllByExpressionAsync(x => x.GroupId == sendCommandDto.GroupId && x.IsOnline ==1)).Select(a => a.Token).ToArray();
+                    var devices = (await FindAllByExpressionAsync(x => x.GroupId == sendCommandDto.GroupId && x.IsOnline == 1)).Select(a => a.Token).ToArray();
                     sendCommandDto.Token = devices;
                 }
 
@@ -523,14 +538,18 @@ namespace MobCentra.Application.Bll
                 var googleCommandSender = new MDMCommandSender(path, "mdmapp-4bc4a");
                 if ((sendNotifyDto.GroupId ?? Guid.Empty) != Guid.Empty)
                 {
-                    var devices = (await FindAllByExpressionAsync(x => x.GroupId == sendNotifyDto.GroupId)).Select(a => a.Token).ToArray();
+                    var devices = (await FindAllByExpressionAsync(x => x.GroupId == sendNotifyDto.GroupId && x.IsOnline == 1)).Select(a => a.Token).ToArray();
                     sendNotifyDto.Token = devices;
                 }
                 if ((sendNotifyDto.CompanyId ?? Guid.Empty) != Guid.Empty)
                 {
-                    var devices = (await FindAllByExpressionAsync(x => x.CompanyId == sendNotifyDto.CompanyId)).Select(a => a.Token).ToArray();
+                    var devices = (await FindAllByExpressionAsync(x => x.CompanyId == sendNotifyDto.CompanyId && x.IsOnline == 1)).Select(a => a.Token).ToArray();
                     sendNotifyDto.Token = devices;
                 }
+
+                if (sendNotifyDto.Token.Length == 0)
+                    return new DcpResponse<string>(string.Empty, "");
+
 
                 var device = await FindByExpressionAsync(a => a.Token == sendNotifyDto.Token[0]);
 
@@ -586,14 +605,15 @@ namespace MobCentra.Application.Bll
                     };
                     bool isInsideAnyFence = geoFences.Any(f => f.City.Area != null && f.City.Area.Contains(swappedPoint));
 
-                    int type = isInsideAnyFence ? 1 : 0;
+                    int type = isInsideAnyFence ? 1 : 2;
+                    if (device.GeoFenceStatus == type) return;
                     DateTime toDay = DateTime.UtcNow;
                     device.GeoFenceStatus = type;
-                    DevicesGeoFenceLog devicesGeoFenceLog = await devicesGeoFenceLogBll.FindLastByExpressionAsync(a => a.DeviceId == record.Id && a.TransType == type);
-                    if (devicesGeoFenceLog == null)
-                    {
+             //       DevicesGeoFenceLog devicesGeoFenceLog = await devicesGeoFenceLogBll.FindLastByExpressionAsync(a => a.DeviceId == record.Id && a.TransType == type);
+               //     if (devicesGeoFenceLog == null)
+                 //   {
                         await devicesGeoFenceLogBll.AddAsync(new DevicesGeoFenceLog { TransDate = DateTime.UtcNow, Coordinations = record.CurrentLocation, TransType = type, DeviceId = record.Id, Device = null });
-                    }
+                   // }
                 }
             }
             catch
@@ -655,6 +675,7 @@ namespace MobCentra.Application.Bll
             entity.GeoFencDate ??= record.GeoFencDate;
             entity.TrackActivated ??= record.TrackActivated;
             entity.GeoFenceStatus ??= record.GeoFenceStatus;
+            entity.DeviceDateTimeMismatch ??= record.DeviceDateTimeMismatch;
             if (!entity.IsFromBackOffice)
             {
                 entity.LastSeenDate = DateTime.UtcNow;
@@ -811,6 +832,10 @@ namespace MobCentra.Application.Bll
             var geoFencs = await geoFencBll.FindAllByExpressionAsync(a => a.DeviceId == record.Id);
             if (geoFencs != null && geoFencs.Count > 0)
             {
+                foreach (var geo in geoFencs.Where(a => a.City == null && a.CityId != null))
+                {
+                    geo.City = await cityBll.GetByIdAsync(geo.CityId.Value);
+                }
                 record.CurrentLocation.SRID = geoFencs[0].City.Area.SRID;
                 var reader = new WKTReader();
                 var swappedPoint = new Point(record.CurrentLocation.Y, record.CurrentLocation.X)
@@ -818,8 +843,11 @@ namespace MobCentra.Application.Bll
                     SRID = record.CurrentLocation.SRID
                 };
                 bool isInsideAnyFence = geoFencs.Any(f => f.City.Area != null && f.City.Area.Contains(swappedPoint));
-                record.GeoFencDate = DateTime.UtcNow;
                 GeoFencType geoFencType = isInsideAnyFence ? GeoFencType.Inside : GeoFencType.Outside;
+
+                if (record.GeoFenceStatus == (int)geoFencType) return;
+
+                record.GeoFenceStatus = isInsideAnyFence ? 1 : 2;
                 GeoFencSetting geoFencSetting = await geoFencSettingBll.FindLastByExpressionAsync(a => a.CompanyId == record.CompanyId && a.ActionType == geoFencType);
                 if (geoFencSetting is not null)
                     await HandleGeFencCommandAsync(record, geoFencSetting, toEmail);
@@ -837,7 +865,7 @@ namespace MobCentra.Application.Bll
 <br/>
 This is an automated notification from Mobcentra.
 <br/>
-Device ({record.Name}) has moved outside its assigned geofence.
+Device ({record.Name}) has moved {(record.GeoFenceStatus == 1 ? "Inside" : "Outside")} its assigned geofence.
 <br/>
 Details:
 <br/>
@@ -852,19 +880,19 @@ Please review this event in the MDM dashboard and take appropriate action if nee
 Best regards,
 <br/>
 Mobcentra – Centralizing Your Mobile World";
-           string status =  await emailSender.SendAsync("Geofence notification", body, toEmail.SettingValue);
+            string status = await emailSender.SendAsync("Geofence notification", body, toEmail.SettingValue);
             await emailLogBll.AddAsync(new EmailLog { CompanyId = record.CompanyId, DeviceId = record.Id, Function = "GeofenceStatus", ReceivedEmail = toEmail.SettingValue, SendStatus = status });
 
         }
 
         public async Task<DcpResponse<bool>> HandleGeoFencCityAsync(List<GeoFencCityDto> geoFencCityDtos)
         {
-            if(geoFencCityDtos.Count == 0) return new DcpResponse<bool>(false);
+            if (geoFencCityDtos.Count == 0) return new DcpResponse<bool>(false);
 
             var oldRecords = await geoFencBll.FindAllByExpressionAsync(a => a.DeviceId == geoFencCityDtos[0].DeviceId);
 
-            if(oldRecords.Count  > 0)
-            await geoFencBll.DeleteRangeAsync(oldRecords);
+            if (oldRecords.Count > 0)
+                await geoFencBll.DeleteRangeAsync(oldRecords);
 
             List<GeoFenc> geoFencs = [];
 
@@ -892,7 +920,7 @@ Mobcentra – Centralizing Your Mobile World";
             {
                 await HandleGeFencEmailAsync(record, toEmail);
             }
-            foreach (var item in commands.Where(a => a != "email"))
+            foreach (var item in commands.Where(a => a != "email" && a != ""))
             {
                 try
                 {
@@ -907,14 +935,15 @@ Mobcentra – Centralizing Your Mobile World";
                         }
                     }
 
-                    await SendCommandAsync(new SendCommandDto {
+                    await SendCommandAsync(new SendCommandDto
+                    {
                         Command = item.Trim(),
                         Token = [record.Token],
                         ApkUrl = arg,
                         FilePath = arg,
                         FileUrl = arg,
-                        PackageName= arg,
-                        Password =arg,
+                        PackageName = arg,
+                        Password = arg,
                         WallpaperUrl = arg
                     });
 
@@ -947,7 +976,7 @@ Mobcentra – Centralizing Your Mobile World";
                 string body = $@"
                                          This is an automated alert from the MobCentra
                                          <br/>
-                                         The battery level for the device {record.Name} (Device ID: {record.Code}) has dropped to {record.BatteryPercentage}%. Please ensure the device is charged to avoid interruption of service.
+                                         The battery level for the device {record.Name} has dropped to {record.BatteryPercentage}%. Please ensure the device is charged to avoid interruption of service.
                                          <br/>
                                          Details:
                                          <br/>
@@ -964,7 +993,7 @@ Mobcentra – Centralizing Your Mobile World";
                                          Best regards,
                                          <br/>
                                          MobCentra";
-               string status =  await emailSender.SendAsync("Battery Warning Level", body, toEmail.SettingValue);
+                string status = await emailSender.SendAsync("Battery Warning Level", body, toEmail.SettingValue);
                 await emailLogBll.AddAsync(new EmailLog { CompanyId = record.CompanyId, DeviceId = record.Id, Function = "BatteryLevel", ReceivedEmail = toEmail.SettingValue, SendStatus = status });
 
 
@@ -973,7 +1002,7 @@ Mobcentra – Centralizing Your Mobile World";
         }
         private async Task HandleTimeMatchNotifyAsync(Device record, Setting toEmail)
         {
-            if (record.GeoFencDate.HasValue && DateTime.UtcNow.Date == record.GeoFencDate.Value.Date) return;
+            if (record.DeviceDateTimeMismatch.HasValue && DateTime.UtcNow.Date == record.DeviceDateTimeMismatch.Value.Date) return;
             if (record.LastSeenDate == null) return;
             DateTime lastSeenDate = record.LastSeenDate.Value;
             var deviceTimeMargin = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.CheckTimeMargin" && a.CompanyId == record.CompanyId);
@@ -990,7 +1019,7 @@ Mobcentra – Centralizing Your Mobile World";
             }
             if (record.IsWrongTime ?? false)
             {
-                record.GeoFencDate = DateTime.UtcNow;
+                record.DeviceDateTimeMismatch = DateTime.UtcNow;
                 string body = $@"Dear Administrator,
 <br/>
 
@@ -1002,7 +1031,7 @@ Our monitoring system has detected that the date and/or time settings on one or 
 
 *Device Details:*
 <br/>
-* Device Name: {record.DeviceName}
+* Device Name: {record.Name}
 <br/>
 * Last Check-in:{record.LastSeenDate?.ToString("yyyy MM dddd hh:mm tt")}
 <br/>
@@ -1019,7 +1048,7 @@ This is a system-generated email. Please do not reply to this message.
 Regards,
 <br/>
 Mobcentra System Notification";
-               string status =   await emailSender.SendAsync("Time Match Warning", body, toEmail.SettingValue);
+                string status = await emailSender.SendAsync("Time Match Warning", body, toEmail.SettingValue);
                 await emailLogBll.AddAsync(new EmailLog { CompanyId = record.CompanyId, DeviceId = record.Id, Function = "TimeMatch", ReceivedEmail = toEmail.SettingValue, SendStatus = status });
 
             }

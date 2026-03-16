@@ -8,7 +8,9 @@ namespace MobCentra.Application.Dto
         public int Active { get; set; }
         public Guid? CompanyId { get; set; }
         public string CompanyName { get; set; }
-        public virtual ICollection<ProfileFeatureDto> ProfileFeatures { get; set; }
+        public virtual ICollection<ProfileFeatureDto> ProfileFeatures { get; set; } = [];
+        public virtual ICollection<ProfileApplicationDto> ProfileApplications { get; set; } = [];
+
         public string CreatedByName { get; set; }
 
 

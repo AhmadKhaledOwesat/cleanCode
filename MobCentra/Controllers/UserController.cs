@@ -34,6 +34,7 @@ namespace MobCentra.Controllers
 
         [HttpPost]
         [Route("update-password")]
+        [AllowAnonymous]
         public async Task<DcpResponse<string>> UpdatePasswordAsync([FromBody] UpdatePasswordRequestDto request) => await userBll.UpdatePasswordAsync(identityManager.CurrentUserId, request.UserId, request.NewPassword);
 
         [HttpPost]

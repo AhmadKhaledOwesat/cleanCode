@@ -13,6 +13,7 @@
         public string? VersionNo { get; set; }
         public int? IsWrongTime { get; set; }
 
-
+        public int? GeoFenceStatus { get; set; } = -1;
+        public string IMEI { get; set; }
     }
 }

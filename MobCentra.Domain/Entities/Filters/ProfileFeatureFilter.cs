@@ -4,4 +4,9 @@
     {
         public Guid? ProfileId { get; set; }
     }
+
+    public class ProfileApplicationFilter : SearchParameters<ProfileApplication>
+    {
+        public Guid? ProfileId { get; set; }
+    }
 }

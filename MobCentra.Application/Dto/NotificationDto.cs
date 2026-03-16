@@ -6,6 +6,10 @@
         public string Body { get; set; }
         public string Token { get; set; }
         public Guid CompanyId { get; set; }
+        public Guid? DeviceId { get; set; }
+
         public string CreatedByName { get; set; }
+        public string DeviceName { get; set; }
+
     }
 }

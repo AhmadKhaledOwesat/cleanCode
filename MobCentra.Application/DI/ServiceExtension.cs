@@ -73,6 +73,7 @@ namespace MobCentra.Application.DI
             serviceDescriptors.AddScoped<IDeviceBll, DeviceBll>();
             serviceDescriptors.AddScoped<IMDMCommandBll, MDMCommandBll>();
             serviceDescriptors.AddScoped<IGeoFencBll, GeoFencBll>();
+            serviceDescriptors.AddScoped<IProfileApplicationBll, ProfileApplicationBll>();
             serviceDescriptors.AddScoped<IBlackListAppBll, BlackListAppBll>();
             serviceDescriptors.AddScoped<IGroupBll, GroupBll>();
             serviceDescriptors.AddScoped<ICommandGroupBll, CommandGroupBll>();

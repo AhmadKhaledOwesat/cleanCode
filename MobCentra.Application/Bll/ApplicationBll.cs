@@ -1,6 +1,8 @@
-﻿using MobCentra.Domain.Entities.Filters;
+using AlphaOmega.Debug;
+using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
 using MobCentra.Infrastructure.Extensions;
+using System.IO;
 
 namespace MobCentra.Application.Bll
 {
@@ -39,9 +41,12 @@ namespace MobCentra.Application.Bll
             var (isValid, errorMessage) = ValidateApkSignature(entity.File);
             if (!isValid)
                  throw new Exception(errorMessage);
-            // Upload application file if provided
+
             if (!entity.File.IsNullOrEmpty())
-                entity.File = await entity.File.UplodaFiles(name:Guid.NewGuid().ToString());
+            {
+                FillApkMetadataFromBase64(entity, entity.File);
+                entity.File = await entity.File.UplodaFiles(name: Guid.NewGuid().ToString());
+            }
             await base.AddAsync(entity);
         }
         private static (bool isValid, string errorMessage) ValidateApkSignature(string base64)
@@ -75,6 +80,44 @@ namespace MobCentra.Application.Bll
                 return (false, "File is not a valid APK. Invalid file signature.");
             return (true, null!);
         }
+
+        private static void FillApkMetadataFromBase64(Domain.Entities.Application entity, string base64)
+        {
+            string data = base64.Trim();
+            if (data.Length == 0) return;
+            int commaIndex = data.IndexOf(',');
+            if (commaIndex >= 0 && data.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                data = data[(commaIndex + 1)..].Trim();
+            byte[] bytes;
+            try
+            {
+                bytes = Convert.FromBase64String(data);
+            }
+            catch (FormatException)
+            {
+                return;
+            }
+            entity.AppSize = bytes.Length;
+            string tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".apk");
+            try
+            {
+                File.WriteAllBytes(tempPath, bytes);
+                using (var apk = new AlphaOmega.Debug.ApkFile(tempPath))
+                {
+                    if (apk.IsValid && apk.AndroidManifest != null)
+                    {
+                        entity.PackageName = apk.AndroidManifest.Package;
+                        entity.VersionName = apk.AndroidManifest.VersionName;
+                    }
+                }
+            }
+            finally
+            {
+                //if (File.Exists(tempPath))
+                //    File.Delete(tempPath);
+            }
+        }
+
         /// <summary>
         /// Updates an existing application, handling file upload if file has changed
         /// </summary>
@@ -86,9 +129,17 @@ namespace MobCentra.Application.Bll
 
             // Upload new file if file has changed and is not empty
             if (app.File != entity.File && !entity.File.IsNullOrEmpty())
-                entity.File = await app.File.UplodaFiles();
+            {
+                FillApkMetadataFromBase64(entity, entity.File);
+                entity.File = await entity.File.UplodaFiles(name: Guid.NewGuid().ToString());
+            }
             else
+            {
                 entity.File = app.File;
+                entity.PackageName = app.PackageName;
+                entity.VersionName = app.VersionName;
+                entity.AppSize = app.AppSize;
+            }
             await base.UpdateAsync(entity);
         }
     }

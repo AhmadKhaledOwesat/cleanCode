@@ -4,6 +4,8 @@
     {
         public string ReportName { get; set; }
         public string ReportNameEn { get; set; }
+        public int? SortOrder { get; set; }
+        public int? Active   { get; set; }
 
         public string ReportProcedure { get; set; }
         public Guid? CompanyId { get; set; }

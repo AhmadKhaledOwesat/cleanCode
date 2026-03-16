@@ -1,4 +1,6 @@
-﻿namespace MobCentra.Application.Dto
+﻿using MobCentra.Domain.Entities;
+
+namespace MobCentra.Application.Dto
 {
     public class DeviceDto : BaseDto<Guid>
     {
@@ -42,8 +44,8 @@
         public virtual ICollection<DeviceTransactionDto> DeviceTransactions { get; set; }
         public virtual ICollection<DeviceFileDto> DeviceFiles { get; set; }
         public virtual ICollection<DeviceStorageFileDto> DeviceStorageFiles { get; set; }
-        public virtual ICollection<TasksDto> Tasks { get; set; }
-        public virtual ICollection<DevicesGeoFenceLogDto> DevicesGeoFenceLogs { get; set; }
+        public  ICollection<TasksDto> Tasks { get; set; }
+       // public  ICollection<DevicesGeoFenceLogDto> DevicesGeoFenceLogs { get; set; }
 
         public bool IsFromBackOffice { get; set; } = false;
         public int? TrackActivated { get; set; }
@@ -53,6 +55,8 @@
         public DateTime? DeviceDateTime { get; set; }
         public bool? IsWrongTime { get; set; }
         public UsersDto User { get; set; }
+        public int? GeoFenceStatus { get; set; }
+
 
     }
 }

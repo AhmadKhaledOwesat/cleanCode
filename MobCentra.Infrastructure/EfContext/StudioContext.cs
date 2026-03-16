@@ -45,6 +45,7 @@ namespace MobCentra.Infrastructure.EfContext
         public DbSet<Group> Groups { get; set; }
         public DbSet<Profile> Profiles { get; set; }
         public DbSet<ProfileFeature> ProfileFeatures { get; set; }
+        public DbSet<ProfileApplication> ProfileApplications { get; set; }
         public DbSet<Notifications> Notifications { get; set; }
         public DbSet<DeviceBatteryTrans> DeviceBatteryTrans { get; set; }
         public DbSet<EmailLog> EmailLogs { get; set; }

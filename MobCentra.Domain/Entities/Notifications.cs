@@ -10,9 +10,16 @@ namespace MobCentra.Domain.Entities
         public string Token { get; set; }
         public Guid? CompanyId { get; set; }
 
+        public Guid? DeviceId { get; set; }
+
         [JsonIgnore]
         [ForeignKey(nameof(CreatedBy))]
         public virtual Users CreatedUser { get; set; }
+
+        [JsonIgnore]
+        [ForeignKey(nameof(DeviceId))]
+        public virtual Device Device { get; set; }
+
 
     }
 }

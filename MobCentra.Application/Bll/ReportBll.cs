@@ -16,17 +16,19 @@ namespace MobCentra.Application.Bll
         /// </summary>
         /// <param name="searchParameters">Filter parameters for searching and pagination</param>
         /// <returns>Paginated result containing matching reports</returns>
-        public override Task<PageResult<Report>> GetAllAsync(ReportFilter searchParameters)
+        public override async Task<PageResult<Report>> GetAllAsync(ReportFilter searchParameters)
         {
             // Build search expression with keyword and company filters
             if (searchParameters is not null)
             {
-                    searchParameters.Expression = new Func<Report, bool>(a =>
+                    searchParameters.Expression = new Func<Report, bool>(a => a.Active == 1 &&
                     (searchParameters.Keyword.IsNullOrEmpty() || a.ReportName.Contains(searchParameters?.Keyword) || a.ReportNameEn.Contains(searchParameters?.Keyword))
                     );
             }
 
-            return base.GetAllAsync(searchParameters);
+            var data = await base.GetAllAsync(searchParameters);
+            data.Collections = [.. data.Collections.OrderBy(a => a.SortOrder)];
+            return data;
         }
 
         /// <summary>

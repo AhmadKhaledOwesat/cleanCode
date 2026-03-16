@@ -38,7 +38,7 @@ namespace MobCentra.Domain.Entities
         public virtual ICollection<DeviceFile> DeviceFiles { get; set; }
         public virtual ICollection<DeviceStorageFile> DeviceStorageFiles { get; set; }
         public virtual ICollection<Tasks> Tasks { get; set; }
-        public virtual ICollection<DevicesGeoFenceLog> DevicesGeoFenceLogs { get; set; }
+      //  public virtual ICollection<DevicesGeoFenceLog> DevicesGeoFenceLogs { get; set; }
         public string ImagesSpace { get; set; }
         public string VideosSpace { get; set; }
         public string AudioSpace { get; set; }
@@ -55,6 +55,7 @@ namespace MobCentra.Domain.Entities
         public bool IsFromBackOffice { get; set; }=false;
 
         public DateTime? GeoFencDate { get; set; }
+        public DateTime? DeviceDateTimeMismatch { get; set; }
         public DateTime? BatteryDate { get; set; }
         public DateTime? DeviceDateTime { get; set; }
         [NotMapped]

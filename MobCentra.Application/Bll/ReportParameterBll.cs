@@ -6,10 +6,12 @@ namespace MobCentra.Application.Bll
 {
     public class ReportParameterBll(IBaseDal<ReportParameter, Guid, ReportParameterFilter> baseDal) : BaseBll<ReportParameter, Guid, ReportParameterFilter>(baseDal), IReportParameterBll
     {
-        public override Task<PageResult<ReportParameter>> GetAllAsync(ReportParameterFilter searchParameters)
+        public override async Task<PageResult<ReportParameter>> GetAllAsync(ReportParameterFilter searchParameters)
         {
             searchParameters.Expression = new Func<ReportParameter, bool>(a => a.ReportId == searchParameters.ReportId);
-            return base.GetAllAsync(searchParameters);
+            var data = await base.GetAllAsync(searchParameters);
+            data.Collections = [.. data.Collections.OrderBy(a => a.ParameterOrder)];
+            return data;
         }
         public async Task<dynamic> GetListDataByIdAsync(Guid id,Guid companyId)
         {

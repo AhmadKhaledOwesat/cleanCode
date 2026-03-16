@@ -12,4 +12,15 @@ namespace MobCentra.Domain.Entities
         [ForeignKey(nameof(FeatureId))]
         public virtual Feature Feature { get; set; }  
     }
+
+    public class ProfileApplication : BaseEntity<Guid>
+    {
+        public Guid ProfileId { get; set; }
+        [ForeignKey(nameof(ProfileId))]
+        public virtual Profile Profile { get; set; }
+
+        public Guid ApplicationsId { get; set; }
+        [ForeignKey(nameof(ApplicationsId))]
+        public virtual Application Application { get; set; }
+    }
 }

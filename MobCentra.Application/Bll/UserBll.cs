@@ -231,7 +231,11 @@ namespace MobCentra.Application.Bll
             // Update password if new password is provided
             if (!string.IsNullOrEmpty(entity.NewPassword))
                 entity.Password = entity.NewPassword.HashedPassword();
-            
+            else
+            {
+                entity.Password  = (await GetByIdAsync(entity.Id)).Password;
+            }
+
             // Handle user roles update if specified in operation type
             if (entity.OperationType.HasFlag(Domain.Enum.OperationType.UserRole))
                 await HandleUserRoles(entity);

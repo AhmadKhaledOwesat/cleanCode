@@ -59,6 +59,7 @@
 
   <ItemGroup>
     <PackageReference Include="AlphaOmega.ApkReader" Version="2.0.10" />
+    <PackageReference Include="AutoMapper" Version="16.1.1" />
     <PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
     <PackageReference Include="Google.Apis.FirebaseCloudMessaging.v1" Version="1.69.0.3722" />
     <PackageReference Include="Google.Cloud.Firestore" Version="3.10.0" />
@@ -66,7 +67,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.7" />
-    <PackageReference Include="MimeKit" Version="4.13.0" />
+    <PackageReference Include="MimeKit" Version="4.15.1" />
   </ItemGroup>
 
   <ItemGroup>

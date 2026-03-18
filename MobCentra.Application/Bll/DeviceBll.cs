@@ -11,6 +11,7 @@ using NetTopologySuite.IO;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Linq.Expressions;
+using static Grpc.Core.Metadata;
 
 namespace MobCentra.Application.Bll
 {
@@ -105,19 +106,18 @@ namespace MobCentra.Application.Bll
 
                 await base.AddAsync(entity);
             }
+        }
 
-            // Send initial sync commands to device
-            await SendCommandAsync(new SendCommandDto { Command = "syncDeviceInfo", Token = [entity.Token] });
-            await SendCommandAsync(new SendCommandDto { Command = "getStorageInfo", Token = [entity.Token] });
 
+        public async Task SilentInstallAsync(Guid id)
+        {
+            Device entity = await GetByIdAsync(id);
             PageResult<ProfileApplication> apps = await profileApplicationBll.GetAllAsync(new ProfileApplicationFilter { ProfileId = entity.ProfileId, PagingParameters = new PagingParameters { PageNumber = 1, PageSize = 500 } });
 
             foreach (var item in apps.Collections)
             {
-                string appPath = $"https://mobcentra.com\\assets\\applications\\{item.Application.File}";
-                await SendCommandAsync(new SendCommandDto { Command = "silent_install", Token = [entity.Token], ApkUrl = appPath });
+                await SendCommandAsync(new SendCommandDto { Command = "silent_install", Token = [entity.Token], ApkUrl = item.Application.File, IsInternal = false }, true);
             }
-
         }
 
         /// <summary>
@@ -326,7 +326,7 @@ namespace MobCentra.Application.Bll
         /// </summary>
         /// <param name="sendCommandDto">DTO containing command details, tokens, and optional parameters</param>
         /// <returns>Response indicating success or error message</returns>
-        public async Task<DcpResponse<string>> SendCommandAsync(SendCommandDto sendCommandDto)
+        public async Task<DcpResponse<string>> SendCommandAsync(SendCommandDto sendCommandDto, bool isByPass = false)
         {
             try
             {
@@ -350,7 +350,7 @@ namespace MobCentra.Application.Bll
 
                 // Check if device is online before sending command
                 (bool flowControl, DcpResponse<string> value) = await HandleOfflineOnlineStatus(sendCommandDto, device);
-                if (!flowControl)
+                if (!flowControl && !isByPass)
                 {
                     return value;
                 }
@@ -578,48 +578,19 @@ namespace MobCentra.Application.Bll
         /// <summary>
         /// Updates device information with comprehensive handling of subscription, queue, email notifications, tracking, and data updates
         /// </summary>
-        /// <param name="entity">The device entity with updated information</param>
-        public override async Task UpdateAsync(Device entity)
+        /// <param name="model">The device entity with updated information</param>
+        public override async Task UpdateAsync(Device model)
         {
-            var record = await base.FindByExpressionAsync(x => x.Token == entity.Token || entity.Code == x.Code);
-            await CheckSubscriptionAsync(record);
-            await AddToQueuAsync(entity, record);
-            await HandleQueuAsync(record);
-            await HandelEmailNofication(entity, record);
-            await HandleTracking(entity, record);
-            await HandleGeoFencAsync(record, entity);
-            await UpdateDataAsync(entity, record);
+            var entity = await base.FindByExpressionAsync(x => x.Token == model.Token || model.Code == x.Code);
+            await CheckSubscriptionAsync(entity);
+            await AddToQueuAsync(model, entity);
+            await HandleQueuAsync(entity);
+            await HandelEmailNofication(model, entity);
+            await HandleTracking(model, entity);
+            await UpdateDataAsync(model, entity);
         }
 
-        private async Task HandleGeoFencAsync(Device record, Device device)
-        {
-            try
-            {
-                var geoFences = await geoFencBll.FindAllByExpressionAsync(a => a.DeviceId == record.Id);
-                if (geoFences != null && geoFences.Count > 0)
-                {
-                    var reader = new WKTReader();
-                    var swappedPoint = new Point(record.CurrentLocation.Y, record.CurrentLocation.X)
-                    {
-                        SRID = record.CurrentLocation.SRID
-                    };
-                    bool isInsideAnyFence = geoFences.Any(f => f.City.Area != null && f.City.Area.Contains(swappedPoint));
-
-                    int type = isInsideAnyFence ? 1 : 2;
-                    if (device.GeoFenceStatus == type) return;
-                    DateTime toDay = DateTime.UtcNow;
-                    device.GeoFenceStatus = type;
-             //       DevicesGeoFenceLog devicesGeoFenceLog = await devicesGeoFenceLogBll.FindLastByExpressionAsync(a => a.DeviceId == record.Id && a.TransType == type);
-               //     if (devicesGeoFenceLog == null)
-                 //   {
-                        await devicesGeoFenceLogBll.AddAsync(new DevicesGeoFenceLog { TransDate = DateTime.UtcNow, Coordinations = record.CurrentLocation, TransType = type, DeviceId = record.Id, Device = null });
-                   // }
-                }
-            }
-            catch
-            {
-            }
-        }
+       
 
         /// <summary>
         /// Updates device data properties while preserving existing values if new values are not provided
@@ -684,6 +655,19 @@ namespace MobCentra.Application.Bll
             {
                 entity.LastSeenDate ??= record.LastSeenDate;
             }
+            // Clear navigation properties to avoid circular dependency (e.g. Device -> GeoFenc -> Device) when saving
+            //entity.Company = null;
+            //entity.Group = null;
+            //entity.GeoFenc = null;
+            //entity.Profile = null;
+            //entity.User = null;
+            //entity.DeviceNotifications = null;
+            //entity.DeviceApplications = null;
+            //entity.DeviceLogs = null;
+            //entity.DeviceTransactions = null;
+            //entity.DeviceFiles = null;
+            //entity.DeviceStorageFiles = null;
+            //entity.Tasks = null;
             await base.UpdateAsync(entity);
 
             if (entity.IsFromBackOffice) return;
@@ -795,22 +779,22 @@ namespace MobCentra.Application.Bll
         /// Handles email notifications for battery warnings and geofence violations
         /// Only processes notifications for device updates (not back office updates)
         /// </summary>
-        /// <param name="entity">The updated device entity</param>
-        /// <param name="record">The existing device record</param>
-        private async Task HandelEmailNofication(Device entity, Device record)
+        /// <param name="model">The updated device entity</param>
+        /// <param name="entity">The existing device record</param>
+        private async Task HandelEmailNofication(Device model, Device entity)
         {
             try
             {
-                if (!entity.IsFromBackOffice)
+                if (!model.IsFromBackOffice)
                 {
-                    var setting = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.BatteyWarningLevel" && a.CompanyId == record.CompanyId);
-                    var toEmail = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.Notification.Email" && a.CompanyId == record.CompanyId);
+                    var setting = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.BatteyWarningLevel" && a.CompanyId == entity.CompanyId);
+                    var toEmail = await settingBll.FindByExpressionAsync(a => a.SettingName == "DCP.Notification.Email" && a.CompanyId == entity.CompanyId);
 
                     if (setting != null && toEmail != null)
                     {
-                        await HandleBatteryNotifyAsync(record, setting, toEmail);
-                        await HandleTimeMatchNotifyAsync(record, toEmail);
-                        await HandleGeoFencNotifyAsync(record, toEmail);
+                        await HandleBatteryNotifyAsync(entity, setting, toEmail);
+                        await HandleTimeMatchNotifyAsync(entity, toEmail);
+                        await HandleGeoFencNotifyAsync(entity, toEmail);
                     }
                 }
             }
@@ -823,34 +807,34 @@ namespace MobCentra.Application.Bll
         /// <summary>
         /// Checks if device has moved outside its geofence and sends notification or executes command
         /// </summary>
-        /// <param name="record">The device record to check</param>
+        /// <param name="entity">The device record to check</param>
         /// <param name="toEmail">The email setting for notifications</param>
-        private async Task HandleGeoFencNotifyAsync(Device record, Setting toEmail)
+        private async Task HandleGeoFencNotifyAsync(Device entity, Setting toEmail)
         {
             //if (record.GeoFencDate.HasValue && DateTime.UtcNow.Date == record.GeoFencDate.Value.Date) return;
 
-            var geoFencs = await geoFencBll.FindAllByExpressionAsync(a => a.DeviceId == record.Id);
+            var geoFencs = await geoFencBll.FindAllByExpressionAsync(a => a.DeviceId == entity.Id);
             if (geoFencs != null && geoFencs.Count > 0)
             {
                 foreach (var geo in geoFencs.Where(a => a.City == null && a.CityId != null))
                 {
                     geo.City = await cityBll.GetByIdAsync(geo.CityId.Value);
                 }
-                record.CurrentLocation.SRID = geoFencs[0].City.Area.SRID;
+                entity.CurrentLocation.SRID = geoFencs[0].City.Area.SRID;
                 var reader = new WKTReader();
-                var swappedPoint = new Point(record.CurrentLocation.Y, record.CurrentLocation.X)
+                var swappedPoint = new Point(entity.CurrentLocation.Y, entity.CurrentLocation.X)
                 {
-                    SRID = record.CurrentLocation.SRID
+                    SRID = entity.CurrentLocation.SRID
                 };
                 bool isInsideAnyFence = geoFencs.Any(f => f.City.Area != null && f.City.Area.Contains(swappedPoint));
                 GeoFencType geoFencType = isInsideAnyFence ? GeoFencType.Inside : GeoFencType.Outside;
 
-                if (record.GeoFenceStatus == (int)geoFencType) return;
-
-                record.GeoFenceStatus = isInsideAnyFence ? 1 : 2;
-                GeoFencSetting geoFencSetting = await geoFencSettingBll.FindLastByExpressionAsync(a => a.CompanyId == record.CompanyId && a.ActionType == geoFencType);
+                if (entity.GeoFenceStatus == (int)geoFencType) return;
+                await devicesGeoFenceLogBll.AddAsync(new DevicesGeoFenceLog { TransDate = DateTime.UtcNow, Coordinations = entity.CurrentLocation, TransType = (int)geoFencType, DeviceId = entity.Id, Device = null });
+                entity.GeoFenceStatus = isInsideAnyFence ? 1 : 2;
+                GeoFencSetting geoFencSetting = await geoFencSettingBll.FindLastByExpressionAsync(a => a.CompanyId == entity.CompanyId && a.ActionType == geoFencType);
                 if (geoFencSetting is not null)
-                    await HandleGeFencCommandAsync(record, geoFencSetting, toEmail);
+                    await HandleGeFencCommandAsync(entity, geoFencSetting, toEmail);
             }
         }
 
@@ -981,8 +965,6 @@ Mobcentra – Centralizing Your Mobile World";
                                          Details:
                                          <br/>
                                          Device Name: {record.Name}
-                                         <br/>
-                                         Device ID:{record.Code}
                                          <br/>
                                          Current Battery Level: {record.BatteryPercentage}%
                                          <br/>

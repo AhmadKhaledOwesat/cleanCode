@@ -15,4 +15,11 @@
         public UsersDto User { get; set; }
 
     }
+
+    public class SettingMiniDto 
+    {
+        public string SettingName { get; set; }
+        public string SettingValue { get; set; }
+        public string SettingValueOt { get; set; }
+    }
 }

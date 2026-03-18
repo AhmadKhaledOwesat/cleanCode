@@ -45,7 +45,7 @@ namespace MobCentra.Application.Dto
         public virtual ICollection<DeviceFileDto> DeviceFiles { get; set; }
         public virtual ICollection<DeviceStorageFileDto> DeviceStorageFiles { get; set; }
         public  ICollection<TasksDto> Tasks { get; set; }
-       // public  ICollection<DevicesGeoFenceLogDto> DevicesGeoFenceLogs { get; set; }
+        public  ICollection<DevicesGeoFenceLogDto> DevicesGeoFenceLogs { get; set; }
 
         public bool IsFromBackOffice { get; set; } = false;
         public int? TrackActivated { get; set; }

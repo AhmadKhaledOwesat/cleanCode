@@ -18,7 +18,7 @@ namespace MobCentra.Controllers
 
         [HttpPost]
         [Route("")]
-        [DisableRequestSizeLimit]
+        [RequestSizeLimit(50 * 1024 * 1024)]
         public virtual async Task<DcpResponse<TId>> AddAsync([FromBody] TDto dto)
         {
             T entity = mapper.Map<T>(dto);
@@ -28,7 +28,7 @@ namespace MobCentra.Controllers
 
         [HttpPost]
         [Route("range")]
-        [DisableRequestSizeLimit]
+        [RequestSizeLimit(50 * 1024 * 1024)]
         public virtual async Task<DcpResponse<List<TId>>> AddRangeAsync([FromBody] List<TDto> dtos)
         {
             List<T> entities = mapper.Map<List<T>>(dtos);
@@ -38,7 +38,7 @@ namespace MobCentra.Controllers
 
         [HttpPost]
         [Route("update")]
-        [DisableRequestSizeLimit]
+        [RequestSizeLimit(50 * 1024 * 1024)]
         public virtual async Task<DcpResponse<TId>> UpdateAsync([FromBody] TDto dto)
         {
             T entity = mapper.Map<T>(dto);

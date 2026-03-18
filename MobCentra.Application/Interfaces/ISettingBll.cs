@@ -7,5 +7,7 @@ namespace MobCentra.Domain.Interfaces
     {
         Task<PageResult<Setting>> GetSettingsAsync(string deviceCode, string settingName);
         Task<Setting> GetSettingByKeyAsync(string settingName);
+        Task<List<Setting>> GetAllSeetingsForMobileAsync(Guid companyId);
+
     }
 }

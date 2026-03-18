@@ -123,6 +123,8 @@ namespace MobCentra.Application.Mapper
                .ReverseMap();
             CreateMap<PageResult<Transaction>, PageResult<TransactionDto>>().ReverseMap();
             CreateMap<Setting, SettingDto>().ReverseMap();
+            CreateMap<Setting, SettingMiniDto>().ReverseMap();
+
             CreateMap<PageResult<Setting>, PageResult<SettingDto>>().ReverseMap();
             CreateMap<Role, RoleDto>().ReverseMap();
             CreateMap<PageResult<Role>, PageResult<RoleDto>>().ReverseMap();
@@ -165,7 +167,7 @@ namespace MobCentra.Application.Mapper
             CreateMap<PageResult<ReportParameter>, PageResult<ReportParameterDto>>().ReverseMap();
             CreateMap<Notifications, NotificationDto>()
                 .ForMember(dest => dest.CreatedByName, src => src.MapFrom(a => a.CreatedUser == null ? "مدير النظام" : a.CreatedUser.FullName))
-                .ForMember(dest => dest.DeviceName, src => src.MapFrom(a => a.Device == null ? "غير معرف" : a.Device.DeviceName))
+                .ForMember(dest => dest.DeviceName, src => src.MapFrom(a => a.Device == null ? "غير معرف" : a.Device.Name))
                 .ReverseMap();
             CreateMap<PageResult<Notifications>, PageResult<NotificationDto>>().ReverseMap();
         }

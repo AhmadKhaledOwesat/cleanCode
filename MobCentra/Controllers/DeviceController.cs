@@ -79,7 +79,13 @@ namespace MobCentra.Controllers
         [Route("geoFenc")]
         public async Task<DcpResponse<bool>> GeoFencCityAsync([FromBody] List<GeoFencCityDto> sendNotifyDto) => await deviceBll.HandleGeoFencCityAsync(sendNotifyDto);
 
-
+        [HttpGet]
+        [Route("install/{id}")]
+        public async Task<DcpResponse<bool>> InstallAsync(Guid id)
+        {
+            await deviceBll.SilentInstallAsync(id);
+            return new DcpResponse<bool>(true);
+        }
     }
 
 }

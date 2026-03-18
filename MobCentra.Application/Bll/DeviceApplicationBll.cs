@@ -37,7 +37,10 @@ namespace MobCentra.Application.Bll
                     {
                         deviceApplication.IsBlocked = item.IsBlocked;
                         await base.UpdateAsync(deviceApplication);
-                        await deviceBll.SendCommandAsync(new SendCommandDto { Token = [device.Token], PackageName = deviceApplication.PackgeName, Command = item.IsBlocked.Value ? "setLockTaskPackages" : "setUnLockTaskPackages" });
+                        await deviceBll.SendCommandAsync(new SendCommandDto { Token = [device.Token],
+                            PackageName = deviceApplication.PackgeName,
+                            Command = item.IsBlocked == true ? "setUnLockTaskPackages" : "setLockTaskPackages"
+                        });
                     }
                 }
             }
@@ -55,7 +58,7 @@ namespace MobCentra.Application.Bll
                 entity.Id = application.Id;
                 entity.CreatedDate = application.CreatedDate;
                 entity.CreatedBy = application.CreatedBy;
-                entity.IsBlocked = application.IsBlocked;
+               // entity.IsBlocked = application.IsBlocked;
                 await base.UpdateAsync(entity);
             }
             else

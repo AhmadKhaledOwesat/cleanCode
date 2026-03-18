@@ -1,4 +1,5 @@
-﻿using MobCentra.Domain.Entities;
+﻿using Google.Api.Gax.Grpc;
+using MobCentra.Domain.Entities;
 using MobCentra.Domain.Entities.Filters;
 using MobCentra.Domain.Interfaces;
 using MobCentra.Infrastructure.Extensions;
@@ -26,6 +27,12 @@ namespace MobCentra.Application.Bll
             }
 
             return await base.GetAllAsync(searchParameters);
+        }
+
+        public  async Task<List<Setting>> GetAllSeetingsForMobileAsync(Guid companyId)
+        {
+            var settings =  await FindAllByExpressionAsync(a=>a.SendToMobileApp == 1 && (a.CompanyId == companyId || a.CompanyId == Guid.Empty) );
+            return settings;
         }
 
         /// <summary>

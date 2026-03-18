@@ -13,8 +13,16 @@ using Newtonsoft.Json.Serialization;
 using Scalar.AspNetCore;
 using System.Net;
 using System.Threading.RateLimiting;
+using MobCentra.Logging;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((ctx, services, cfg) =>
+    cfg.ReadFrom.Configuration(ctx.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+);
 
 // Add services to the container.
 builder.Services.AddDcpMapper();
@@ -22,6 +30,8 @@ builder.Services.AddSignalR();
 builder.Services.AddEfDbContext(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddServices();
+builder.Services.Configure<RequestLoggingOptions>(builder.Configuration.GetSection("RequestLogging"));
+builder.Services.AddTransient<RequestBodyLoggingMiddleware>();
 builder.Services.AddOptions<EmailOptions>()
      .Bind(builder.Configuration.GetSection("Email"));
 builder.Services.AddCors(op =>
@@ -62,7 +72,7 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = (int)HttpStatusCode.TooManyRequests;
     options.AddFixedWindowLimiter("api", config =>
     {
-        config.PermitLimit = 20;
+        config.PermitLimit = 100;
         config.Window = TimeSpan.FromMinutes(15);
         config.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         config.QueueLimit = 0;
@@ -112,6 +122,7 @@ app.UseExceptionHandler(appError =>
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
+app.UseMiddleware<RequestBodyLoggingMiddleware>();
 app.Use(async (context, next) =>
 {
     context.Response.Headers.XContentTypeOptions = "nosniff";

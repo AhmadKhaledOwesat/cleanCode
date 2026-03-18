@@ -34,5 +34,12 @@ namespace MobCentra.Controllers
         {
             return new DcpResponse<SettingDto>(mapper.Map<SettingDto>(await settingBll.GetSettingByKeyAsync(settingName)));
         }
+
+        [HttpGet]
+        [Route("mini/{companyId}")]
+        public async Task<DcpResponse<SettingMiniDto>> GetSettingsByCompanyIdAsync([FromRoute] Guid companyId)
+        {
+            return new DcpResponse<SettingMiniDto>(mapper.Map<SettingMiniDto>(await settingBll.GetAllSeetingsForMobileAsync(companyId)));
+        }
     }
 }

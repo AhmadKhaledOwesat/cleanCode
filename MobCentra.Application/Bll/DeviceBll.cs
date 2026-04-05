@@ -380,6 +380,33 @@ namespace MobCentra.Application.Bll
                     device.Code = null;
                     await base.UpdateAsync(device);
                 }
+                try
+                {
+                    if (sendCommandDto.Command == "setLockTaskPackages")
+                    {
+                        var deviceApp = await deviceApplicationBll.Value.FindByExpressionAsync(a => a.PackgeName == sendCommandDto.PackageName);
+                        if (deviceApp != null)
+                        {
+                            deviceApp.IsBlocked = true;
+                            await deviceApplicationBll.Value.UpdateAsync(deviceApp);
+                        }
+                    }
+
+                    if (sendCommandDto.Command == "setUnLockTaskPackages")
+                    {
+                        var deviceApp = await deviceApplicationBll.Value.FindByExpressionAsync(a => a.PackgeName == sendCommandDto.PackageName);
+                        if (deviceApp != null)
+                        {
+                            deviceApp.IsBlocked = false;
+                            await deviceApplicationBll.Value.UpdateAsync(deviceApp);
+                        }
+                    }
+                }
+                catch
+                {
+
+                }
+                
 
                 if (sendCommandDto.Command == "setDateTime")
                 {
@@ -596,14 +623,14 @@ namespace MobCentra.Application.Bll
         /// Updates device data properties while preserving existing values if new values are not provided
         /// Also handles last seen date based on update source
         /// </summary>
-        /// <param name="entity">The updated device entity</param>
-        /// <param name="record">The existing device record from database</param>
-        private async Task UpdateDataAsync(Device entity, Device record)
+        /// <param name="model">The updated device entity</param>
+        /// <param name="entity">The existing device record from database</param>
+        private async Task UpdateDataAsync(Device model, Device entity)
         {
-            if (entity.DeviceDateTime.HasValue)
+            if (model.DeviceDateTime.HasValue)
             {
-                var dt = entity.DeviceDateTime.Value;
-                entity.DeviceDateTime = dt.ToUniversalTime();
+                var dt = model.DeviceDateTime.Value;
+                model.DeviceDateTime = dt.ToUniversalTime();
                 //record.DeviceDateTime = dt.Kind switch
                 //{
                 //    DateTimeKind.Utc => dt,
@@ -612,66 +639,54 @@ namespace MobCentra.Application.Bll
                 //    _ => dt
                 //};
             }
-            string dbValue = entity.BatteryPercentage;
-            entity.BatteryPercentage ??= record.BatteryPercentage;
-            entity.CurrentLocation ??= record.CurrentLocation;
-            entity.Name ??= record.Name;
-            entity.Code ??= record.Code;
-            entity.Id = record.Id;
-            entity.Token ??= record.Token;
-            entity.CreatedBy = record.CreatedBy;
-            entity.CreatedDate = record.CreatedDate;
-            entity.CompanyId ??= record.CompanyId;
-            entity.GroupId ??= record.GroupId;
-            entity.TotalSpace ??= record.TotalSpace;
-            entity.UsedSpace ??= record.UsedSpace;
-            entity.FreeSpace ??= record.FreeSpace;
-            entity.OSVersion ??= record.OSVersion;
-            entity.DeviceModel ??= record.DeviceModel;
-            entity.DeviceName ??= record.DeviceName;
-            entity.ScreenSize ??= record.ScreenSize;
-            entity.IMEI ??= record.IMEI;
-            entity.BatteryCapacity ??= record.BatteryCapacity;
-            entity.ProfileId ??= record.ProfileId;
-            entity.IsOnline = 1;
-            entity.ImagesSpace ??= record.ImagesSpace;
-            entity.VideosSpace ??= record.VideosSpace;
-            entity.AudioSpace ??= record.AudioSpace;
-            entity.DocumentsSpace ??= record.DocumentsSpace;
-            entity.OtherSpace ??= record.OtherSpace;
-            entity.SystemSpace ??= record.SystemSpace;
-            entity.AppVersion ??= record.AppVersion;
-            entity.BatteryDate ??= record.BatteryDate;
-            entity.DeviceDateTime ??= record.DeviceDateTime;
-            entity.GeoFencDate ??= record.GeoFencDate;
-            entity.TrackActivated ??= record.TrackActivated;
-            entity.GeoFenceStatus ??= record.GeoFenceStatus;
-            entity.DeviceDateTimeMismatch ??= record.DeviceDateTimeMismatch;
-            if (!entity.IsFromBackOffice)
+            string dbValue = model.BatteryPercentage;
+            model.BatteryPercentage ??= entity.BatteryPercentage;
+            model.CurrentLocation ??= entity.CurrentLocation;
+            model.Name ??= entity.Name;
+            model.Code ??= entity.Code;
+            model.Id = entity.Id;
+            model.Token ??= entity.Token;
+            model.CreatedBy = entity.CreatedBy;
+            model.CreatedDate = entity.CreatedDate;
+            model.CompanyId ??= entity.CompanyId;
+            model.GroupId ??= entity.GroupId;
+            model.TotalSpace ??= entity.TotalSpace;
+            model.UsedSpace ??= entity.UsedSpace;
+            model.FreeSpace ??= entity.FreeSpace;
+            model.OSVersion ??= entity.OSVersion;
+            model.DeviceModel ??= entity.DeviceModel;
+            model.DeviceName ??= entity.DeviceName;
+            model.ScreenSize ??= entity.ScreenSize;
+            model.IMEI ??= entity.IMEI;
+            model.BatteryCapacity ??= entity.BatteryCapacity;
+            model.ProfileId ??= entity.ProfileId;
+            model.IsOnline = 1;
+            model.ImagesSpace ??= entity.ImagesSpace;
+            model.VideosSpace ??= entity.VideosSpace;
+            model.AudioSpace ??= entity.AudioSpace;
+            model.DocumentsSpace ??= entity.DocumentsSpace;
+            model.OtherSpace ??= entity.OtherSpace;
+            model.SystemSpace ??= entity.SystemSpace;
+            model.AppVersion ??= entity.AppVersion;
+            model.BatteryDate ??= entity.BatteryDate;
+            model.DeviceDateTime ??= entity.DeviceDateTime;
+            model.GeoFencDate ??= entity.GeoFencDate;
+            model.TrackActivated ??= entity.TrackActivated;
+            model.GeoFenceStatus ??= entity.GeoFenceStatus;
+            model.DeviceDateTimeMismatch ??= entity.DeviceDateTimeMismatch;
+            if (!model.IsFromBackOffice)
             {
-                entity.LastSeenDate = DateTime.UtcNow;
+                model.LastSeenDate = DateTime.UtcNow;
             }
             else
             {
-                entity.LastSeenDate ??= record.LastSeenDate;
+                model.LastSeenDate ??= entity.LastSeenDate;
             }
-            // Clear navigation properties to avoid circular dependency (e.g. Device -> GeoFenc -> Device) when saving
-            //entity.Company = null;
-            //entity.Group = null;
-            //entity.GeoFenc = null;
-            //entity.Profile = null;
-            //entity.User = null;
-            //entity.DeviceNotifications = null;
-            //entity.DeviceApplications = null;
-            //entity.DeviceLogs = null;
-            //entity.DeviceTransactions = null;
-            //entity.DeviceFiles = null;
-            //entity.DeviceStorageFiles = null;
-            //entity.Tasks = null;
-            await base.UpdateAsync(entity);
+           
+            await base.UpdateAsync(model);
 
-            if (entity.IsFromBackOffice) return;
-            await HandleBatteryData(dbValue, record);
+            if (model.IsFromBackOffice) return;
+            await HandleBatteryData(dbValue, entity);
 
         }
 
@@ -680,20 +695,20 @@ namespace MobCentra.Application.Bll
         /// Also cleans up old battery transactions older than 3 days
         /// </summary>
         /// <param name="entity">The updated device entity</param>
-        /// <param name="record">The existing device record</param>
-        private async Task HandleBatteryData(string dbValue, Device record)
+        /// <param name="entity">The existing device record</param>
+        private async Task HandleBatteryData(string modelValue, Device entity)
         {
-            DateTime past3Days = DateTime.UtcNow.AddDays(-3);
+            //DateTime past3Days = DateTime.UtcNow.AddDays(-3);
 
-            var allTrans = await deviceBatteryTransBll.FindAllByExpressionAsync(a => a.TransDateTime <= past3Days);
+            //var allTrans = await deviceBatteryTransBll.FindAllByExpressionAsync(a => a.TransDateTime <= past3Days);
 
-            if (allTrans != null && allTrans.Count > 0)
+            //if (allTrans != null && allTrans.Count > 0)
+            //{
+            //    await deviceBatteryTransBll.DeleteRangeAsync(allTrans);
+            //}
+            if (modelValue != entity.BatteryPercentage)
             {
-                await deviceBatteryTransBll.DeleteRangeAsync(allTrans);
-            }
-            if (dbValue != record.BatteryPercentage)
-            {
-                await deviceBatteryTransBll.AddAsync(new DeviceBatteryTrans { BatteryPercentage = record.BatteryPercentage, DeviceId = record.Id, TransDateTime = DateTime.UtcNow });
+                await deviceBatteryTransBll.AddAsync(new DeviceBatteryTrans { BatteryPercentage = modelValue, DeviceId = entity.Id, TransDateTime = DateTime.UtcNow });
             }
         }
 

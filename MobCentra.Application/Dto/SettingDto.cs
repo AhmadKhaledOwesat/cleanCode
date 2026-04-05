@@ -13,6 +13,9 @@
         public Guid? CompanyId { get; set; }
         public int IsSystem { get; set; }
         public UsersDto User { get; set; }
+        public string HintAr { get; set; }
+        public string HintOt { get; set; }
+
 
     }
 

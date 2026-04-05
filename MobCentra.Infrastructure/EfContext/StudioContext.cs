@@ -55,11 +55,13 @@ namespace MobCentra.Infrastructure.EfContext
             modelBuilder.Entity<DeviceNotification>().ToTable("DeviceNotifications");
             modelBuilder.Entity<City>().ToTable("City").Property(a => a.Area).HasColumnType("geometry");
             modelBuilder.Entity<City>().HasQueryFilter(c => !c.IsDeleted);
-            modelBuilder.Entity<DeviceQueu>().ToTable("DeviceQueus");
-            modelBuilder.Entity<Device>().ToTable("Devices").Property(a => a.CurrentLocation).HasColumnType("geometry");
+            modelBuilder.Entity<DeviceQueu>().ToTable("DeviceQueus", a => a.UseSqlOutputClause(false));
+            modelBuilder.Entity<Device>().ToTable("Devices",a=> a.UseSqlOutputClause(false)).Property(a => a.CurrentLocation).HasColumnType("geometry");
             modelBuilder.Entity<GeoFenc>().ToTable("GeoFencs");
             modelBuilder.Entity<DevicesGeoFenceLog>().ToTable("DevicesGeoFenceLog").Property(a => a.Coordinations).HasColumnType("geometry");
             modelBuilder.Entity<EmailLog>().ToTable("EmailLog");
+            modelBuilder.Entity<Setting>().ToTable("Settings", a => a.UseSqlOutputClause(false));
+
 
         }
     }

@@ -37,9 +37,9 @@ namespace MobCentra.Controllers
 
         [HttpGet]
         [Route("mini/{companyId}")]
-        public async Task<DcpResponse<SettingMiniDto>> GetSettingsByCompanyIdAsync([FromRoute] Guid companyId)
+        public async Task<DcpResponse<List<SettingMiniDto>>> GetSettingsByCompanyIdAsync([FromRoute] Guid companyId)
         {
-            return new DcpResponse<SettingMiniDto>(mapper.Map<SettingMiniDto>(await settingBll.GetAllSeetingsForMobileAsync(companyId)));
+            return new DcpResponse<List<SettingMiniDto>>(mapper.Map<List<SettingMiniDto>>(await settingBll.GetAllSeetingsForMobileAsync(companyId)));
         }
     }
 }

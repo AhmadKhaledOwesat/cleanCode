@@ -12,6 +12,9 @@ namespace MobCentra.Domain.Entities
         public int IsMedia { get; set; }
         public int EnableEditor { get; set; }
         public int SendToMobileApp { get; set; }
+        public string HintAr { get; set; }
+        public string HintOt { get; set; }
+
         public Guid? CompanyId { get; set; }
         [ForeignKey(nameof(CompanyId))]
         public virtual Company Company { get; set; }

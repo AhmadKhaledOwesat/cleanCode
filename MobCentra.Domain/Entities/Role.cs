@@ -8,6 +8,6 @@
         public Guid? CompanyId { get; set; }
         public virtual ICollection<UserRole> UserRoles { get; set; }
         public virtual ICollection<RolePrivilege> RolePrivileges { get; set; }
-
+        public int? IsSystem { get; set; }
     }
 }

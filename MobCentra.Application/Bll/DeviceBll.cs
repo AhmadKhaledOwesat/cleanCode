@@ -103,7 +103,7 @@ namespace MobCentra.Application.Bll
                     var dt = entity.DeviceDateTime.Value;
                     entity.DeviceDateTime = dt.ToUniversalTime();
                 }
-
+                entity.LastSeenDate = DateTime.UtcNow;
                 await base.AddAsync(entity);
             }
         }
@@ -116,7 +116,7 @@ namespace MobCentra.Application.Bll
 
             foreach (var item in apps.Collections)
             {
-                await SendCommandAsync(new SendCommandDto { Command = "silent_install", Token = [entity.Token], ApkUrl = item.Application.File, IsInternal = false }, true);
+                await SendCommandAsync(new SendCommandDto {IgnoreLog = true, Command = "silent_install", FileName = item.Application.NameAr, Token = [entity.Token], ApkUrl = item.Application.File, IsInternal = false }, true);
             }
         }
 
@@ -373,13 +373,7 @@ namespace MobCentra.Application.Bll
                 }
 
                 // Handle device unbinding
-                if (sendCommandDto.Command == "unbind_device")
-                {
-                    device.UnpinedDate = DateTime.UtcNow;
-                    device.Token = null;
-                    device.Code = null;
-                    await base.UpdateAsync(device);
-                }
+
                 try
                 {
                     if (sendCommandDto.Command == "setLockTaskPackages")
@@ -406,7 +400,7 @@ namespace MobCentra.Application.Bll
                 {
 
                 }
-                
+
 
                 if (sendCommandDto.Command == "setDateTime")
                 {
@@ -442,11 +436,23 @@ namespace MobCentra.Application.Bll
                     {
                         await googleCommandSender.SendCommandAsync(token, sendCommandDto.Command, packages, sendCommandDto.ApkUrl, sendCommandDto.Password, sendCommandDto.PackageName, sendCommandDto.WallpaperUrl, sendCommandDto.IsInternal, sendCommandDto.FilePath, sendCommandDto.FileName, sendCommandDto.FromDate, sendCommandDto.ToDate, sendCommandDto.FileUrl);
                         // Log the command for audit purposes
-                        await HandleDeviceLog(sendCommandDto, token, packages);
+                        if (!sendCommandDto.IgnoreLog)
+                            await HandleDeviceLog(sendCommandDto, token, packages);
                     }
                     catch
                     {
                         continue;
+                    }
+                }
+                if (sendCommandDto.Command == "unbind_device")
+                {
+                    try
+                    {
+                        await base.DeleteAsync(device.Id);
+                    }
+                    catch (Exception ex)
+                    {
+
                     }
                 }
                 return new DcpResponse<string>(string.Empty, "");
@@ -534,6 +540,9 @@ namespace MobCentra.Application.Bll
                 if (!sendCommandDto.Password.IsNullOrEmpty())
                     keyValuePairs.Add(nameof(sendCommandDto.Password), sendCommandDto.Password);
 
+                if (!sendCommandDto.PackageName.IsNullOrEmpty())
+                    keyValuePairs.Add(nameof(sendCommandDto.PackageName), sendCommandDto.PackageName);
+
                 if (!sendCommandDto.ApkUrl.IsNullOrEmpty())
                     keyValuePairs.Add(nameof(sendCommandDto.ApkUrl), sendCommandDto.ApkUrl);
 
@@ -617,7 +626,7 @@ namespace MobCentra.Application.Bll
             await UpdateDataAsync(model, entity);
         }
 
-       
+
 
         /// <summary>
         /// Updates device data properties while preserving existing values if new values are not provided
@@ -641,7 +650,10 @@ namespace MobCentra.Application.Bll
             }
             string dbValue = model.BatteryPercentage;
             model.BatteryPercentage ??= entity.BatteryPercentage;
-            model.CurrentLocation ??= entity.CurrentLocation;
+            if (model.CurrentLocation == new Point(0, 0))
+                model.CurrentLocation = entity.CurrentLocation;
+            else
+                model.CurrentLocation ??= entity.CurrentLocation;
             model.Name ??= entity.Name;
             model.Code ??= entity.Code;
             model.Id = entity.Id;
@@ -682,7 +694,7 @@ namespace MobCentra.Application.Bll
             {
                 model.LastSeenDate ??= entity.LastSeenDate;
             }
-           
+
             await base.UpdateAsync(model);
 
             if (model.IsFromBackOffice) return;

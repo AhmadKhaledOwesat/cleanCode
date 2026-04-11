@@ -50,7 +50,7 @@
             return JsonSerializer.Serialize(message);
 
         }
-        public async Task SendCommandAsync(string deviceToken, string command, string[] packages, string apkUrl, string password, string packageName, string wallpaperUrl, bool isInternal, string filePath, string fileName,DateTime? fromDate,DateTime? toDate,string fileUrl)
+        public async Task SendCommandAsync(string deviceToken, string command, string[] packages, string apkUrl, string password, string packageName, string wallpaperUrl, bool isInternal, string filePath, string fileName, DateTime? fromDate, DateTime? toDate, string fileUrl)
         {
             // Get access token
             var dictionary = new Dictionary<string, string> { { "command", command } };
@@ -58,9 +58,9 @@
             if (command == "blacklist_settings" || command == "whitelist_settings")
                 dictionary.Add("packages", $"[{string.Join("','", packages.Select(a => a))}]");
 
-            if(command ==  "setLockTaskPackages" || command ==  "setUnLockTaskPackages")
+            if (command == "setLockTaskPackages" || command == "setUnLockTaskPackages")
             {
-                dictionary.Add("packages" , packageName);
+                dictionary.Add("packages", packageName);
 
             }
 
@@ -92,7 +92,12 @@
             }
 
             if (command == "silent_install" && !apkUrl.IsNullOrEmpty())
+            {
                 dictionary.Add("apkLink", isInternal ? apkUrl : $"https://mobcentra.com\\assets\\applications\\{apkUrl}");
+                if (!string.IsNullOrEmpty(fileName))
+                    dictionary.Add("title", fileName);
+
+            }
 
             if (command == "resetPassword")
                 dictionary.Add("password", password);
@@ -101,7 +106,7 @@
                 dictionary.Add("packageName", packageName);
 
             if (command == "changeWallPaper" && !wallpaperUrl.IsNullOrEmpty())
-                dictionary.Add("wallpaperUrl", $"https://mobcentra.com\\assets\\images\\{wallpaperUrl}" );
+                dictionary.Add("wallpaperUrl", $"https://mobcentra.com\\assets\\images\\{wallpaperUrl}");
 
             dictionary.Add("fcmToken", deviceToken);
 

@@ -9,5 +9,6 @@ namespace MobCentra.Application.Dto
         public Guid? CompanyId { get; set; }
         public virtual ICollection<UserRoleDto> UserRoles { get; set; }
         public virtual ICollection<RolePrivilegeDto> RolePrivileges { get; set; }
+        public int? IsSystem { get; set; }
     }
 }

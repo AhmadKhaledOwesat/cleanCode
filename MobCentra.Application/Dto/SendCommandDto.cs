@@ -18,6 +18,7 @@
         public DateTime? ToDate { get; set; }
         public string FileUrl { get; set; }
 
+        public bool IgnoreLog { get; set; } = false;
 
     }
     public class SendNotifyDto
